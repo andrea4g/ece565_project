@@ -19,22 +19,21 @@ using namespace std;
 /*----------------------------------------------------------------------------*/
 /*--------------------------STRUCT DECLARATION--------------------------------*/
 /*----------------------------------------------------------------------------*/
-struct G_Node
-{
+struct G_Node {
   int id;                       // node ID
   int type;                     // node Function-type
   list<G_Node *> child;         // successor nodes (distance = 1)
   list<G_Node *> parent;        // predecessor nodes (distance = 1)
   int asap, alap, tasap, talap; // T-asap, T-alap (in # of clock cycle), Temp-Tasap, Temp-Talap;
   bool schl, tschl;             // bool, = 1 scheduled; =0 not
-  int schl_time;    
+  int schl_time;
 };
 
 /*----------------------------------------------------------------------------*/
 /*--------------------------GLOBAL VARIABLES----------------------------------*/
 /*----------------------------------------------------------------------------*/
 const int tnum = 9;                   // number of operation type
-const double latency_parameter = 1.5; // latency constant parameter, change this
+const double latency_parameter = 4; // latency constant parameter, change this
                                       // parameter can affect the latency
                                       // constraint and hence, the final
                                       // scheduling result is changed
@@ -112,8 +111,7 @@ int main(int argc, char **argv) {
 /*----------------------------------------------------------------------------*/
 
 // read library paramenters
-void GET_LIB()
-{
+void GET_LIB() {
   rt[0] = 1;
   rt[1] = 1;
   rt[2] = 3;
@@ -550,7 +548,7 @@ int checkChild(G_Node *op) {
 
   bool test = true;
   int myAlap = LC + 1;
-   
+
   for (auto it = op->child.begin(); it != op->child.end() && true; it++) {
     if ((*it)->alap <= LC) {
       if ((*it)->alap - rt[op->type] <= myAlap) {
