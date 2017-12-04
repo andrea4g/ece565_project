@@ -1,0 +1,22 @@
+digraph hal1 {
+    node [fontcolor=white,style=filled,color=blue2];
+    MUL_1 [label = MUL ];
+    MUL_2 [label = MUL ];
+    MUL_3 [label = MUL ];
+    STR_4 [label = STR ];
+    STR_5 [label = STR ];
+    MUL_6 [label = MUL ];
+    MUL_7 [label = MUL ];
+    MUL_8 [label = MUL ];
+    ADD_9 [label = ADD ];
+    ADD_10 [label = ADD ];
+    LOD_11 [label = LOD ];
+    MUL_1 -> MUL_3 [ name = 1 ];
+    MUL_2 -> MUL_3 [ name = 2 ];
+    MUL_3 -> STR_4 [ name = 3 ];
+    STR_4 -> STR_5 [ name = 4 ];
+    MUL_6 -> MUL_7 [ name = 5 ];
+    MUL_7 -> STR_5 [ name = 6 ];
+    MUL_8 -> ADD_9 [ name = 7 ];
+    ADD_10 -> LOD_11 [ name = 8 ];
+}
