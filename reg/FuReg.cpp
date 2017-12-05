@@ -366,6 +366,11 @@ void LEBind() {
   //read every operation
   for (int i = 0; i < opn; i++)
     Bresult.bind[ops[i].type][ops[i].myFU->id].push_back(ops[i].id);
+
+  for ( int i = 0; i < tnum; i++ ) {
+    cout << i << " " << fulist[i].size() << endl;
+  }
+
 }
 
 /*----------------------------------------------------------------------------*/
