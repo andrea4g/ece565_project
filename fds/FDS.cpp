@@ -29,11 +29,13 @@ struct G_Node {
   int schl_time;
 };
 
+
+
 /*----------------------------------------------------------------------------*/
 /*--------------------------GLOBAL VARIABLES----------------------------------*/
 /*----------------------------------------------------------------------------*/
 const int tnum = 9;                   // number of operation type
-const double latency_parameter = 4; // latency constant parameter, change this
+const double latency_parameter = 8; // latency constant parameter, change this
                                       // parameter can affect the latency
                                       // constraint and hence, the final
                                       // scheduling result is changed
@@ -47,6 +49,8 @@ string outputfile;                    // output filename
 
 int opn = 0;                          // # of operations in current DFG
 G_Node* ops;                          // operations list
+int* top_order;
+
 int rt[tnum];                         // delay info
 
 /*----------------------------------------------------------------------------*/
@@ -69,6 +73,11 @@ int checkChild(G_Node *op);   // sub-function for Talap
 void updateAL(G_Node *ops);   // updating ALAP
 void updateAS(G_Node *ops);   // updating ASAP
 
+
+
+
+void recursiveTopologicalSort(int node, bool* visited, queue<G_Node* > *top_sort);
+void topologicalSort();
 /*----------------------------------------------------------------------------*/
 /*--------------------------------MAIN----------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -79,6 +88,12 @@ int main(int argc, char **argv) {
 
   edge_num = 0;
   readGraphInfo(argv, DFG, &edge_num); //read DFG info
+  
+  top_order = new int[opn];
+
+  cout << "TOP" << endl;
+  topologicalSort();
+  cout << "END TOP" << endl;
 
   //read DFG name without '.txt' and create output filename = 'DFG_result.txt'
   stringstream str(argv[1]);
@@ -88,7 +103,7 @@ int main(int argc, char **argv) {
       DFGname = tok;
     //cout << tok << endl;
   }
-  string folder = "res/";
+  string folder = "./res/";
   string s = "_result.txt";
   outputfile = folder + DFGname + s;
 
@@ -160,6 +175,7 @@ void readGraphInfo(char **argv, int DFG, int *edge_num) {
   }
   fclose(bench);  // close the input DFG file
   ops = new G_Node[opn];
+  
   // close the input DFG file
   // based on the number of operation node in the DFG, dynamically set the size
   std::map<string, int> oplist;
@@ -642,3 +658,54 @@ void updateAL(G_Node *ops) {
   } // end while
 
 }
+
+
+void topologicalSort() {
+
+  queue<G_Node*> top_sort;
+  bool visited[opn];
+
+  for ( int i = 0; i < opn; i++ ) {
+    visited[i] = false;
+  }
+
+  for (int i = 0; i < opn; i++) {
+    if ( ops[i].parent.empty() ) {
+      recursiveTopologicalSort(i,visited,&top_sort);
+    }
+  }
+
+  for ( int i = opn-1; i >= 0; i-- ) {
+    top_order[i] = top_sort.front()->id;
+    top_sort.pop();
+  }
+
+}
+
+
+void recursiveTopologicalSort(int node, bool* visited, queue<G_Node* > *top_sort) {
+
+  G_Node* current;
+
+  if (visited[node] == true) {
+    return;
+  }
+
+  visited[node] = true;
+  current = &ops[node];
+
+  for (auto it = current->child.begin(); it != current->child.end(); it++ ) {
+    recursiveTopologicalSort((*it)->id, visited, top_sort);
+  }
+
+  (*top_sort).push(current);
+  return;
+
+}
+
+
+
+
+
+
+
