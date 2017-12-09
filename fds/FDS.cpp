@@ -295,6 +295,11 @@ void output_schedule(string str) {
 
 // Force directed scheduling function
 void FDS() {
+
+  for ( int i = 0; i < opn; i++ ) {
+    ops[i].schl = false;
+    ops[i].id = i;
+  }
   //find latency constraint
   //Obtain ASAP latency first
   updateAS(ops); //Obtain ASAP for each operation
@@ -309,12 +314,6 @@ void FDS() {
   double temp = 0.0, force = 0.0, newP = 0.0, oldP = 0.0; //newP/oldP for the compuataion of force
   int flag = 0;
   int count_here = 0;
-
-  for ( int i = 0; i < opn; i++ ) {
-    ops[i].schl = false;
-    ops[i].id = i;
-  }
-
 
   while ( !flag ) { // outer loop
     //starting from second iteration, update node's ASAP/ALAP first.
@@ -529,7 +528,7 @@ void updateAL(G_Node *ops) {
 void topologicalSort() {
 
   queue<G_Node*> top_sort;
-  bool visited[opn];
+  bool* visited = new bool[opn];
 
   for ( int i = 0; i < opn; i++ ) {
     visited[i] = false;
