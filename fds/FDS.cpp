@@ -61,20 +61,20 @@ void GET_LIB();                                           // hardcode for delay 
 void Read_DFG(const int DFG, char** argv);                // Read-DFG filename
 void readGraphInfo(char **argv, int DFG, int *edge_num);  // Read-DFG info: node type, node's predecessors/successors
 void output_schedule(string str);                         // print the final scheduling result
+void print_schedule();
 
 // FDS Core Functions
-void FDS();                   // main function FDS
-void ASAP(G_Node *ops);       // node's Tasap initialization and comptuation
-int checkParent(G_Node *op);  // sub-function for T_asap
+void FDS(int max_depth);      // main function FDS
 void getLC();                 // obtain LC
-
-void ALAP(G_Node *ops);       // node's T_alap initialization and computation
-int checkChild(G_Node *op);   // sub-function for Talap
 
 void updateAL(G_Node *ops);   // updating ALAP
 void updateAS(G_Node *ops);   // updating ASAP
 
 
+double computeChildForces(int node, int new_asap_time, vector< vector<double> > DG,
+                          int depth, int max_depth);
+double computeParentForces( int node, int new_alap_time, vector< vector<double> > DG,
+                            int depth, int max_depth);
 
 
 void recursiveTopologicalSort(int node, bool* visited, queue<G_Node* > *top_sort);
@@ -85,11 +85,12 @@ void topologicalSort();
 int main(int argc, char **argv) {
 
   int edge_num = 0;
+  int max_depth = 0;
   GET_LIB();          //get rt[] delay info for all f-types
 
-  if ( argc < 4 ) {
+  if ( argc < 5 ) {
     cout << "Usage: " << 
-      argv[0] << "[input_file_path] [output_file_folder] [latency parameter]" << endl;
+      argv[0] << "[input_file_path] [output_file_folder] [latency_parameter] [max_depth_propagation]" << endl;
     return -1;
   }
 
@@ -119,8 +120,8 @@ int main(int argc, char **argv) {
  
 
   latency_parameter = atof(argv[3]);
-
-  FDS();
+  max_depth = atoi(argv[4]);
+  FDS(max_depth);
 
   // print on the console the results
   cout << "*********************************************" << endl;
@@ -128,6 +129,7 @@ int main(int argc, char **argv) {
   cout << "Latency contraint = " << LC << endl;
   output_schedule(outputfile);  //output function print output file
   cout << "*********************************************" << endl;
+  print_schedule();
 
   delete[] ops;
 
@@ -137,6 +139,67 @@ int main(int argc, char **argv) {
 /*----------------------------------------------------------------------------*/
 /*-----------------------------FUNCTIONS--------------------------------------*/
 /*----------------------------------------------------------------------------*/
+
+void print_schedule() {
+
+  vector<vector<int >> cc_schedule(LC+1, vector<int>(opn));
+  vector<vector<int >> op_busy(LC+1, vector<int>(9));
+  vector<int> max_op(9);
+  int number_of_chars;
+
+  for ( int i = 0; i < LC + 1; i++ ) {
+    for ( int j = 0; j < opn; j++ ) {
+      cc_schedule[i][j] = 0;
+    }
+  }
+
+  for ( int i = 0; i < LC + 1; i++ ) {
+    for ( int j = 0; j < 9; j++ ) {
+      op_busy[i][j] = 0;
+    }
+  }
+
+  for ( int i = 0; i < 0; i++ ) {
+    max_op[i] = 0;
+  }
+
+  for ( int i = 0; i < opn; i++ ) {
+    for ( int j = 0; j < rt[ops[i].type]; j++ ) {
+      cc_schedule[ops[i].schl_time + j][i] = 1;
+      op_busy[ops[i].schl_time + j][ops[i].type]++;
+    }
+  }
+
+  for ( int i  = 1; i < LC + 1; i++ ) {
+    cout << "CC" << i << " ";
+    number_of_chars = 4;
+    for ( int j = 0; j < opn; j++ ) {
+      if ( cc_schedule[i][j] != 0 ) {
+        cout << j << " ";
+        number_of_chars = number_of_chars + 2;
+      }
+    }
+    for ( int i = 0; i < 50 - number_of_chars; i++ ) {
+      cout << " " ;
+    }
+    cout << "\t| ";
+    for ( int j = 0; j < 9; j++ ) {
+      cout << "R" << j << ": " << op_busy[i][j] << " ";
+      if ( op_busy[i][j] > max_op[j] ) {
+        max_op[j] = op_busy[i][j];
+      }
+    }
+    cout << endl;
+  }
+
+  for ( int i = 0; i < 9; i++ ) {
+    cout << "R" << i << " " << max_op[i] << endl;
+  } 
+
+
+
+}
+
 
 // read library paramenters
 void GET_LIB() {
@@ -282,7 +345,7 @@ void output_schedule(string str) {
     fout_s << "Latency Constraint " << LC << endl;
     for (int i = 0; i < opn; i++) {
       //std::cout << i << " " << ops[i].asap << endl; //after scheduling, ASAP = ALAP of each node
-      fout_s << i << " " << ops[i].schl_time  << " " << ops[i].type <<  endl;
+      fout_s << i << " " << ops[i].schl_time  << " " << ops[i].asap << " " << ops[i].alap << " " << ops[i].type <<  endl;
     }
     fout_s.close();
     fout_s.clear();
@@ -294,7 +357,7 @@ void output_schedule(string str) {
 /*----------------------------------------------------------------------------*/
 
 // Force directed scheduling function
-void FDS() {
+void FDS(int max_depth) {
 
   for ( int i = 0; i < opn; i++ ) {
     ops[i].schl = false;
@@ -310,8 +373,8 @@ void FDS() {
   // initialize DG by tnum X (LC+1) note that, starts from cc = 0 to LC, but we don't do compuation in row cc = 0.
   vector< vector<double> > DG(tnum, vector<double>(LC + 1, 0)); // DG[TYPE][CC]
   double bestForce = 0.0; // best scheduling force value
-  int bestNode = -1, bestT = -1, iteration = 0, temp1;    // best Node ID and T (cc), # of iteration;
-  double temp = 0.0, force = 0.0, newP = 0.0, oldP = 0.0; //newP/oldP for the compuataion of force
+  int bestNode = -1, bestT = -1, iteration = 0;    // best Node ID and T (cc), # of iteration;
+  double temp = 0.0, force = 0.0; //newP/oldP for the compuataion of force
   int flag = 0;
   int count_here = 0;
 
@@ -334,10 +397,6 @@ void FDS() {
         ops[i].schl_time = ops[i].asap;
         ops[i].schl = true;
       }
-      if ( ops[i].schl ) {
-        ops[i].asap = ops[i].schl_time;
-        ops[i].alap = ops[i].schl_time;
-      }
       temp = 1.0 / double(ops[i].alap - ops[i].asap + 1); // set temp = scheduling probability = 1/(# of event), to be fast computed.
       for (auto t = ops[i].asap; t <= ops[i].alap; t++)   // asap to alap cc range,
         for (auto d = 0; d < rt[ops[i].type]; d++)        // delay
@@ -358,82 +417,24 @@ void FDS() {
       for (auto t = ops[n].asap; t <= ops[n].alap; t++) {  // check all cc (all event) in MR of n [asap, alap]
         force = 0.0; // initialize temp force value
         temp = 1.0 / double(ops[n].alap - ops[n].asap + 1); // old event probability = 1/temp1
-        temp1 = ops[n].alap - ops[n].asap + 1; // # of old events
 
         // self force: self = sum across MR { -(deltaP) * (DG + 1/3 * deltaP) };
-        for (auto cc = ops[n].asap; cc <= ops[n].alap; cc++)
-          if (cc == t) // @temp scheduling cc t
-            for (auto d = 0; d < rt[ops[n].type]; d++) //across multi-delay
+        for (auto cc = ops[n].asap; cc <= ops[n].alap; cc++) {
+          if (cc == t) { // @temp scheduling cc t 
+            for (auto d = 0; d < rt[ops[n].type]; d++) { //across multi-delay
               force += (1.0 - temp) * (DG[ops[n].type][cc + d] + 1.0/3.0 * (1.0 - temp));
-          else
-            for (auto d = 0; d < rt[ops[n].type]; d++) //across multi-delay
+            }
+          }
+          else {
+            for (auto d = 0; d < rt[ops[n].type]; d++) { //across multi-delay
               force += -temp * (DG[ops[n].type][cc + d] - 1.0/3.0 * temp);
-
-        // p-s force:
-        // Predecessors: only affect the P(n) alap:
-        newP = 0.0;
-        oldP = 0.0;
-        for (auto it = ops[n].parent.begin(); it != ops[n].parent.end(); it++) {
-          if ((*it)->schl || t >= (*it)->alap + rt[(*it)->type] )
-            continue;
-
-          oldP = 1/double((*it)->alap - (*it)->asap + 1); // temp is the oldP
-          //newP = double(oldP - (temp1 - (t - ops[n].asap + 1))); // newP = oldP - [(n's oldP) - (t - n's ASAP + 1)]
-          newP = 1/double( (t - rt[(*it)->type]) - (*it)->asap + 1);
-          temp = 1.0 / newP - 1.0 / oldP;
-
-          for (auto cc = (*it)->asap; cc <= (*it)->alap; cc++) {
-            for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
-              force -= oldP*(DG[(*it)->type][cc + d] - 1/3*oldP);
             }
           }
+        }
+        
+        force += computeChildForces(n, t, DG, 1, max_depth);
+        force += computeParentForces(n, t, DG, 1, max_depth);
 
-          for (auto cc = (*it)->asap; cc <= (t - rt[(*it)->type]); cc++) {
-            for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
-              force += newP*(DG[(*it)->type][cc + d] + 1/3*newP);
-            }
-          }
-
-            /*  if (cc <= t - rt[(*it)->type])
-              for (auto d = 0; d < rt[(*it)->type]; d++)
-                force += 0*-(DG[(*it)->type][cc + d] + temp / 3.0) * temp;
-            else
-              for (auto d = 0; d < rt[(*it)->type]; d++)
-                force += 0*(DG[(*it)->type][cc + d] - 1.0 / 3.0 / oldP) / oldP;
-          */
-        } // end for auto it
-        // Successors: only affect the S(n) asap:
-        newP = 0.0;
-        oldP = 0.0;
-        for (auto it = ops[n].child.begin(); it != ops[n].child.end(); it++) {
-          if ((*it)->schl || t + rt[ops[n].type] <= (*it)->asap )
-            continue;
-
-          oldP = 1/double((*it)->alap - (*it)->asap + 1); //temp is the oldP
-          newP = 1/double((*it)->alap - (t + rt[ops[n].type]) +1);
-          temp = 1.0 / newP - 1.0 / oldP;
-
-          for (auto cc = (*it)->asap; cc <= (*it)->alap; cc++) {
-            for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
-              force -= oldP*DG[(*it)->type][cc + d];
-            }
-          }
-
-          for (auto cc = (t + rt[ops[n].type]); cc <= (*it)->alap; cc++) {
-            for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
-              force += newP*DG[(*it)->type][cc + d];
-            }
-          }
-          /*
-          for (auto cc = (*it)->asap; cc <= (*it)->alap; cc++)
-            if (cc >= t - rt[(*it)->type])
-              for (auto d = 0; d < rt[(*it)->type]; d++)
-                force += 0*-(DG[(*it)->type][cc + d] + temp / 3.0) * temp;
-            else
-              for (auto d = 0; d < rt[(*it)->type]; d++)
-                force += 0*(DG[(*it)->type][cc + d] - 1.0 / 3.0 / oldP) / oldP;
-        */
-        } // end for auto it
         if (bestT < 0) {  // update best node, cc, force value
           bestForce = force;
           bestNode = n;
@@ -572,6 +573,87 @@ void recursiveTopologicalSort(int node, bool* visited, queue<G_Node* > *top_sort
   return;
 
 }
+
+
+double computeParentForces( int node, int new_alap_time, vector< vector<double> > DG,
+                            int depth, int max_depth) {
+
+  double oldP, newP;
+  double force = 0.0;
+  int new_parent_alap_time;
+
+  for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++) {
+    new_parent_alap_time = new_alap_time - rt[(*it)->type];
+    if ((*it)->schl || new_parent_alap_time >= (*it)->alap )
+      continue;
+
+    oldP = 1/double((*it)->alap - (*it)->asap + 1); // temp is the oldP
+    newP = 1/double(new_parent_alap_time - (*it)->asap + 1);
+
+    for (auto cc = (*it)->asap; cc <= (*it)->alap; cc++) {
+      for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
+        force -= oldP*(DG[(*it)->type][cc + d] - 1.0/3*oldP);
+      }
+    }
+
+    for (auto cc = (*it)->asap; cc <= new_parent_alap_time; cc++) {
+      for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
+        force += newP*(DG[(*it)->type][cc + d] + 1.0/3*newP);
+      }
+    }
+
+    if ( max_depth == -1 || depth < max_depth ) {
+      force += computeParentForces((*it)->id, new_parent_alap_time, DG,
+                                  depth + 1, max_depth);
+    }
+  }
+
+  return force;
+
+}
+
+
+double computeChildForces(int node, int new_asap_time, vector< vector<double> > DG,
+                          int depth, int max_depth) {
+
+
+  double newP, oldP;
+  double force = 0.0;
+  int new_child_asap_time;
+  // Successors: only affect the S(n) asap:
+  newP = 0.0;
+  oldP = 0.0;
+  for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
+    new_child_asap_time = new_asap_time + rt[ops[node].type];
+    if ((*it)->schl || new_child_asap_time <= (*it)->asap )
+      continue;
+
+    oldP = 1/double((*it)->alap - (*it)->asap + 1); //temp is the oldP
+    newP = 1/double((*it)->alap - new_child_asap_time + 1);
+
+    for (auto cc = (*it)->asap; cc <= (*it)->alap; cc++) {
+      for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
+        force -= oldP*(DG[(*it)->type][cc + d] - 1.0/3*oldP);
+      }
+    }
+
+    for (auto cc = new_child_asap_time; cc <= (*it)->alap; cc++) {
+      for ( auto d = 0; d < rt[(*it)->type]; d++ ) {
+        force += newP*(DG[(*it)->type][cc + d] + 1.0/3*newP);
+      }
+    }
+
+    if ( max_depth == -1 || depth < max_depth ) {
+      force += computeChildForces((*it)->id, new_child_asap_time, DG,
+                                  depth + 1, max_depth);
+    }
+
+  }
+
+  return force;
+
+}
+
 
 
 
