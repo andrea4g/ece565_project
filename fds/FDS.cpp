@@ -14,6 +14,7 @@
 #include <queue>
 #include <sstream>
 
+
 using namespace std;
 
 /*----------------------------------------------------------------------------*/
@@ -35,7 +36,7 @@ struct G_Node {
 /*--------------------------GLOBAL VARIABLES----------------------------------*/
 /*----------------------------------------------------------------------------*/
 const int tnum = 9;                   // number of operation type
-const double latency_parameter = 8; // latency constant parameter, change this
+double latency_parameter;             // latency constant parameter, change this
                                       // parameter can affect the latency
                                       // constraint and hence, the final
                                       // scheduling result is changed
@@ -86,6 +87,12 @@ int main(int argc, char **argv) {
   int edge_num = 0;
   GET_LIB();          //get rt[] delay info for all f-types
 
+  if ( argc < 4 ) {
+    cout << "Usage: " << 
+      argv[0] << "[input_file_path] [output_file_folder] [latency parameter]" << endl;
+    return -1;
+  }
+
   edge_num = 0;
   readGraphInfo(argv, DFG, &edge_num); //read DFG info
   
@@ -103,9 +110,15 @@ int main(int argc, char **argv) {
       DFGname = tok;
     //cout << tok << endl;
   }
-  string folder = "./res/";
+  
+
+
+  string folder(argv[2]);
   string s = "_result.txt";
-  outputfile = folder + DFGname + s;
+  outputfile = folder + DFGname.substr(DFGname.find_last_of("\\/") + 1,DFGname.length() -1 ) + s;
+ 
+
+  latency_parameter = atof(argv[3]);
 
   FDS();
 
@@ -269,7 +282,7 @@ void output_schedule(string str) {
     fout_s << "Latency Constraint " << LC << endl;
     for (int i = 0; i < opn; i++) {
       //std::cout << i << " " << ops[i].asap << endl; //after scheduling, ASAP = ALAP of each node
-      fout_s << i << " " << ops[i].schl_time  << " " << ops[i].asap << " " << ops[i].alap << " " << ops[i].type <<  endl;
+      fout_s << i << " " << ops[i].schl_time  << " " << ops[i].type <<  endl;
     }
     fout_s.close();
     fout_s.clear();
@@ -284,9 +297,9 @@ void output_schedule(string str) {
 void FDS() {
   //find latency constraint
   //Obtain ASAP latency first
-  ASAP(ops); //Obtain ASAP for each operation
+  updateAS(ops); //Obtain ASAP for each operation
   getLC(); //obtain LC
-  ALAP(ops); //Obtain ALAP for each operation
+  updateAL(ops); //Obtain ALAP for each operation
 
   // start FDS
   // initialize DG by tnum X (LC+1) note that, starts from cc = 0 to LC, but we don't do compuation in row cc = 0.
@@ -296,6 +309,12 @@ void FDS() {
   double temp = 0.0, force = 0.0, newP = 0.0, oldP = 0.0; //newP/oldP for the compuataion of force
   int flag = 0;
   int count_here = 0;
+
+  for ( int i = 0; i < opn; i++ ) {
+    ops[i].schl = false;
+    ops[i].id = i;
+  }
+
 
   while ( !flag ) { // outer loop
     //starting from second iteration, update node's ASAP/ALAP first.
@@ -433,7 +452,6 @@ void FDS() {
     //  break;
     if ( bestNode >= 0 ) {
       count_here++;
-      cout << bestNode << " " << bestT <<  endl;
       ops[bestNode].asap = bestT;
       ops[bestNode].alap = bestT;
       ops[bestNode].schl_time = bestT;
@@ -442,10 +460,6 @@ void FDS() {
     iteration++;
   } // end FDS-outer loop
 
-  cout << "--------" << endl;
-  cout << iteration << endl;
-  cout << count_here << endl;
-  cout << "--------" << endl;
   DG.clear();
 }
 
@@ -463,160 +477,29 @@ void getLC() {
   LC *= latency_parameter;
 }
 
-/*----------------------------------------------------------------------------*/
-
-// ASA_
-void ASAP(G_Node *ops) {
-
-  queue <G_Node *> q;   // queue to read/update nodes' ASAP
-  for (auto i = 0; i < opn; i++) {
-    ops[i].id = i;        // initialize node id
-    ops[i].asap = -1;     // initialize all node's asap to -1
-    ops[i].schl = false;  //all nodes are not scheduled.
-    if (ops[i].parent.empty()) { // push all input nodes into q (no parent)
-      ops[i].asap = 1; //input nodes have asap = 1
-      q.push(&ops[i]); //push all input nodes into q.
-    }
-  }
-
-  G_Node *current = new G_Node; //temp node
-  int temp = 0;
-
-  while (!q.empty()) {
-    current = q.front();      // read the head of q
-    if (current->asap > 0) {  // if head.asap > 0 (all visited), push all unvisited children into q.
-      for (auto it = current->child.begin(); it != current->child.end(); it++) {  // check all children and see if they can obtain ASAP and push into q
-        temp = checkParent(*it);
-        if (temp > 0) {   // all parent are visited (has > 0 T-asap, and then, return my Asap = max Parent Asap + d
-          (*it)->asap = temp; // get asap
-          q.push((*it));      // push into q
-        } // end if temp
-      } // end auto it
-      q.pop(); // pop the current (head node)
-    } // end if current->asap
-  } // end while
-
-  //for (int i = 0; i < opn; i++)
-    //cout << "my id: " << i << " , asap time = " << ops[i].asap << endl;
-}
-
-/*----------------------------------------------------------------------------*/
-
-// check parent
-int checkParent(G_Node *op) {
-
-  bool test = true;
-  int myAsap = -1;
-
-  for (auto it = op->parent.begin(); it != op->parent.end() && test; it++) {
-    if ((*it)->asap > 0) {
-      test = true;
-      if ((*it)->asap + rt[(*it)->type] > myAsap) {
-        myAsap = (*it)->asap + rt[(*it)->type];   // my ASAP = parent.ASAP + delay
-      }
-    } // end first if
-    else {
-      test = false;
-      myAsap = -1;
-    } // end else
-  } // end for auto it
-  return myAsap;
-}
-
-/*----------------------------------------------------------------------------*/
-
-// ALAP
-void ALAP(G_Node *ops) {
-
-  queue <G_Node *> q; // same as obtain ASAP:
-  //push all output node into q first
-  for (auto i = 0; i < opn; i++) {
-    ops[i].alap = LC + 1;     // intialize > LC
-    if (ops[i].child.empty()) {
-      ops[i].alap = LC - rt[ops[i].type] + 1; // LC-Delay+1
-      q.push(&ops[i]); // push into q.
-    }
-  }
-
-  G_Node *current = new G_Node;
-  int temp = 0;
-
-  while (!q.empty()) {
-    current = q.front();
-    if (current->alap <= LC) {  // less than LC, the parent ALAP may be computed
-      for (auto it = current->parent.begin(); it != current->parent.end(); it++) {
-        temp = checkChild((*it));
-        if (temp <= LC) { // my ALAP has been updated
-          (*it)->alap = temp;
-          q.push(*it);
-        } // end if temp
-      } // end for auto it
-      q.pop();
-    } // end if current->alap
-  } // end while
-
-}
-
-/*----------------------------------------------------------------------------*/
-
-// check child
-int checkChild(G_Node *op) {
-
-  bool test = true;
-  int myAlap = LC + 1;
-
-  for (auto it = op->child.begin(); it != op->child.end() && true; it++) {
-    if ((*it)->alap <= LC) {
-      if ((*it)->alap - rt[op->type] <= myAlap) {
-        myAlap = (*it)->alap - rt[op->type];
-      }
-    }
-    else {
-      test = false;
-      myAlap = LC + 1;
-    }
-  }
-  return myAlap;
-}
 
 /*----------------------------------------------------------------------------*/
 
 // update ASAP
 void updateAS(G_Node *ops) {
-  queue <G_Node *> q; // queue to read/update nodes' ASAP
-  for (auto i = 0; i < opn; i++) {
-    if (ops[i].schl) {  // skip scheduled operations and push into q.
-      q.push(&ops[i]);
-      continue;
-    }
 
-    ops[i].asap = -1; // initialize all unscheduled node's asap to -1
+  int max, node;
+  int possible_time;
 
-    if (ops[i].parent.empty()) {  // push all input nodes into q (no parent)
-      ops[i].asap = 1; // input nodes have asap = 1
-      q.push(&ops[i]); // push all input nodes into q.
-    }
-  } // end for auto i
-
-  G_Node *current = new G_Node; // temp node
-  int temp = 0;
-
-  while (!q.empty()) {
-    current = q.front();      // read the head of q
-    q.pop();
-    for (auto it = current->child.begin(); it != current->child.end(); it++) {
-      if ( (*it)->schl == false && (*it)->asap == -1 ) {
-        temp = checkParent(*it);
-        if (temp > 0) { // all parent are visited (has > 0 T-asap, and then, return my Asap = max Parent Asap + d
-          (*it)->asap = temp; //get asap
-          q.push((*it)); //push into q
-        } // end if temp
+  for ( int i = 0; i < opn; i++ ) {
+    node = top_order[i];
+    if (!ops[node].schl) {
+      max = 1;
+      for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++) {
+        possible_time = (*it)->asap + rt[(*it)->type];
+        if ( possible_time > max ) {
+          max = possible_time;
+        }
       }
-    } // end for auto it
-  } // end while
+      ops[node].asap = max;
+    }
+  }
 
-  //for (int i = 0; i < opn; i++)
-  //cout << "my id: " << i << " , asap time = " << ops[i].asap << endl;
 
 }
 
@@ -624,38 +507,21 @@ void updateAS(G_Node *ops) {
 
 // commento ALAP
 void updateAL(G_Node *ops) {
-  queue <G_Node *> q; // same as obtain ASAP:
-  // push all output node into q first
-  for (auto i = 0; i < opn; i++) {
-    if (ops[i].schl) {  // skip scheduled operations and push into q.
-      q.push(&ops[i]);
-      continue;
+
+  int min, node;
+
+  for ( int i = opn - 1; i >= 0; i-- ) {
+    node = top_order[i];
+    if (!ops[node].schl) {
+      min = LC + 1;
+      for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
+        if ( (*it)->alap < min ) {
+          min = (*it)->alap;
+        }
+      }
+      ops[node].alap = min - rt[ops[node].type];
     }
-
-    ops[i].alap = LC + 1; //intialize > LC
-
-    if (ops[i].child.empty()) {
-      ops[i].alap = LC - rt[ops[i].type] + 1; // LC-Delay+1
-      q.push(&ops[i]); // push into q.
-    }
-  } // end for auto i
-
-  G_Node *current = new G_Node;
-  int temp = 0;
-
-  while (!q.empty()) {
-    current = q.front();
-    q.pop();
-    for (auto it = current->parent.begin(); it != current->parent.end(); it++) {
-      if ( (*it)->schl == false && (*it)->alap == LC+1 ) {
-        temp = checkChild((*it));
-        if (temp <= LC) { // my ALAP has been updated
-          (*it)->alap = temp;
-          q.push(*it);
-        } // end if temp
-      } // end for auto it
-    }
-  } // end while
+  }
 
 }
 
@@ -679,6 +545,11 @@ void topologicalSort() {
     top_order[i] = top_sort.front()->id;
     top_sort.pop();
   }
+
+  for ( int i = 0; i < opn; i++ ) {
+    cout << top_order[i] << endl;
+  }
+
 
 }
 
