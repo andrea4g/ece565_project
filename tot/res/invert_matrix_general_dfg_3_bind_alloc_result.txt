@@ -1,0 +1,6 @@
+For DFG: res/invert_matrix_general_dfg_3_bind_alloc_result.txt
+Total # of Registers: 443
+Total # of 2-1 Mux: 80
+Total # of 2-1 Demux: 1008
+Max Mux size: 3
+Max Demux size: 3

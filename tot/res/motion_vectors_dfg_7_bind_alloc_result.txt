@@ -1,0 +1,6 @@
+For DFG: res/motion_vectors_dfg_7_bind_alloc_result.txt
+Total # of Registers: 46
+Total # of 2-1 Mux: 96
+Total # of 2-1 Demux: 176
+Max Mux size: 3
+Max Demux size: 3

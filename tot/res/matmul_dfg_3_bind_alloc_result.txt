@@ -1,0 +1,6 @@
+For DFG: res/matmul_dfg_3_bind_alloc_result.txt
+Total # of Registers: 136
+Total # of 2-1 Mux: 112
+Total # of 2-1 Demux: 464
+Max Mux size: 4
+Max Demux size: 3

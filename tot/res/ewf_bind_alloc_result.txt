@@ -1,0 +1,6 @@
+For DFG: res/ewf_bind_alloc_result.txt
+Total # of Registers: 35
+Total # of 2-1 Mux: 96
+Total # of 2-1 Demux: 192
+Max Mux size: 4
+Max Demux size: 2
