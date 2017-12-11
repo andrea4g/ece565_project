@@ -1,0 +1,6 @@
+For DFG: res/smooth_color_z_triangle_dfg_31_bind_alloc_result.txt
+Total # of Registers: 230
+Total # of 2-1 Mux: 112
+Total # of 2-1 Demux: 1520
+Max Mux size: 3
+Max Demux size: 2
