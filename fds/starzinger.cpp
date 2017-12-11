@@ -30,6 +30,30 @@ struct G_Node {
   int schl_time;
 };
 
+struct FU {
+  int type;             // FU-type
+  int id;               // FU-id
+  vector<FU *> fanin;
+  vector<FU *> fanout;
+  int taval;            // available time
+
+  int TavalPort1;
+  int TavalPort2;
+
+  vector<int> port1;    // store reg_id
+  vector<int> port2;    // store reg_id
+};
+
+
+struct Reg {
+  int id;       // my local id for each FU
+  int globalID; // my global id
+  int Taval;
+  vector<G_Node *> operations;
+  vector<G_Node *> extInput;  // store connected external Input
+  vector<FU *> outputFU;      // store connected fanin-FU
+  int demux;
+};
 
 
 /*----------------------------------------------------------------------------*/
@@ -76,6 +100,8 @@ double computeChildForces(int node, int new_asap_time, vector< vector<double> > 
 double computeParentForces( int node, int new_alap_time, vector< vector<double> > DG,
                             int depth, int max_depth);
 
+
+double computeSelfForce(int node, int t, vector<vector<double>> DG);
 
 void recursiveTopologicalSort(int node, bool* visited, queue<G_Node* > *top_sort);
 void topologicalSort();
@@ -413,25 +439,34 @@ void FDS(int max_depth) {
         flag = 0;
       }
       for (auto t = ops[n].asap; t <= ops[n].alap; t++) {  // check all cc (all event) in MR of n [asap, alap]
-        force = 0.0; // initialize temp force value
-        temp = 1.0 / double(ops[n].alap - ops[n].asap + 1); // old event probability = 1/temp1
+        FU* actual_FU;
+        force = 0.0;
+        force += computeSelfForce(int node, int t, vector<vector<double>> DG) {
+        force += computeChildForces(n, t, DG, 1, max_depth);
+        force += computeParentForces(n, t, DG, 1, max_depth);
 
-        // self force: self = sum across MR { -(deltaP) * (DG + 1/3 * deltaP) };
-        for (auto cc = ops[n].asap; cc <= ops[n].alap; cc++) {
-          if (cc == t) { // @temp scheduling cc t 
-            for (auto d = 0; d < rt[ops[n].type]; d++) { //across multi-delay
-              force += (1.0 - temp) * (DG[ops[n].type][cc + d] + 1.0/3.0 * (1.0 - temp));
-            }
-          }
-          else {
-            for (auto d = 0; d < rt[ops[n].type]; d++) { //across multi-delay
-              force += -temp * (DG[ops[n].type][cc + d] - 1.0/3.0 * temp);
+
+        if ( FU_list[ops[n].type].empty() == true ) {
+          actual_FU = new FU;
+          actual_FU->type = ops[n].type;
+          actual_FU->id = res[ops[n].type]++;
+          min_cost = computeBindCost(n,t,actual_FU,DG);
+          min_FU = actual_FU;
+        } else {
+          min_cost = -1;
+          min_FU = NULL;
+          for ( auto it = FU_list[ops[n].type].begin(); it != FU_list[ops[n].type].end(); it++ ) {
+            if ( available( *it, t, t + rt[ops[n].type]  - 1) == true ) {
+              actual_bind_cost = computeBindCost(n,t,it,DG)
+              if ( min_cost == -1 || actual_bind_cost < min_cost ) {
+                min_cost = actual_bind_cost;
+                min_FU = *it;
+              }
             }
           }
         }
-        
-        force += computeChildForces(n, t, DG, 1, max_depth);
-        force += computeParentForces(n, t, DG, 1, max_depth);
+
+        force += min_cost;
 
         if (bestT < 0) {  // update best node, cc, force value
           bestForce = force;
@@ -442,12 +477,11 @@ void FDS(int max_depth) {
           bestForce = force;
           bestNode = n;
           bestT = t;
+          best_FU = FU;
         }
       } // end for auto t
     } // end for auto n (inner loop)
-    //schedule the best node
-    //if (bestT < 0) //when all nodes has been scheduled, bestT = -1 (not changed) and break the while to stop the process
-    //  break;
+    
     if ( bestNode >= 0 ) {
       count_here++;
       ops[bestNode].asap = bestT;
@@ -652,7 +686,210 @@ double computeChildForces(int node, int new_asap_time, vector< vector<double> > 
 
 }
 
+                          // t is the possible schedule time
+double computeSelfForce(int node, int t, vector<vector<double>> DG) {
 
+  double force;
+  double old_p;
+
+  force = 0.0; // initialize temp force value
+  old_p = 1.0 / double(ops[node].alap - ops[node].asap + 1); // old event probability = 1/temp1
+
+  for (auto cc = ops[node].asap; cc <= ops[node].alap; cc++) {
+    if (cc == t) { // @temp scheduling cc t 
+      for (auto d = 0; d < rt[ops[node].type]; d++) { //across multi-delay
+        force += (1.0 - old_p) * (DG[ops[node].type][cc + d] + 1.0/3.0 * (1.0 - old_p));
+      }
+    }
+    else {
+      for (auto d = 0; d < rt[ops[node].type]; d++) { //across multi-delay
+        force += - old_p*(DG[ops[node].type][cc + d] - 1.0/3.0 * old_p);
+      }
+    }
+  }
+
+  return force;
+
+}
+
+
+double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG) {
+
+  list<int> future_parents;
+  list<int> future_children;
+  double cost = 0.0;
+  int sharability_elements = 0;
+  double sharability_parameter = 0.0;
+  FU* parent_FU;
+  FU* child_FU;
+
+  for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++) {
+    if ( (*it)->schl == false ) {
+      // Inserting parents operation non scheduled of node as future parents of act_FU
+      future_parents.push_back((*it)->id);
+    } else {
+      // In case some of my parents is already scheduled, update possibly the lifetime
+      // of the variable since my ALAP now is changed ( temporarily ) to t.
+      update_temp_lifetime((*it), t , node);
+    }
+  }
+
+  for ( auto it = act_FU->future_parents.begin(); it != act_FU->future_parent.end(); it++ ) {
+    if ( (*it)->id != node ) {
+      // Include also the future parents of the act_FU where trying to bind node
+      future_parents.push_back((*it)->id);
+    }
+  }
+
+
+  for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
+    if ( (*it)->schl == false ) {
+      // Inserting parents operation non scheduled of node as future parents of act_FU
+      future_children.push_back((*it)->id);
+    }
+  }
+
+  for ( auto it = act_FU->future_children.begin(); it != act_FU->future_children.end(); it++ ) {
+    if ( (*it)->id != node ) {
+      // Include also the future parents of the act_FU where trying to bind node
+      future_children.push_back((*it)->id);
+    }
+  }
+
+
+  sharability_element = 0;
+  sharability_parameter = 0.0;
+
+  for ( auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++ ) {
+    if ( (*it)->schl == true ) {
+      // If scheduled compute the cost and the sharability parameter
+      parent_FU = (*it)->my_FU;
+      parent_Reg = (*it)->my_Reg;
+      if ( Reg_id->out_FU.find(act_FU->id) == Reg_id->out_FU.end() ) {
+        double sharability;
+        sharability_element += computeSharabilityParameter(&sharability, future_parents, parent_FU, DG);
+        sharability_parameter += sharability;
+        sharability_element += computeSharabilityParameter(&sharability, parent_FU->future_children, act_FU, DG);
+        sharability_parameter += sharability;
+        actual_cost += mux_cost;
+      }
+    }
+  }
+
+  total_cost += actual_cost*sharability_parameter/(sharability_element+1);
+
+
+
+/*
+ *              FINE PARTE RELATIVA AI PADRI INIZIO FIGLI MORE COMPLEX!!!
+ *
+*/
+
+  
+
+  // Compute sharability due to only future childs -> depends only on the 
+  // number of future operation of NODE.
+  sharability_element = 0;
+  sharability_parameter = 0.0;
+  for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
+    if ( (*it)->schl == true ) {
+      double sharability;
+      child_FU = (*it)->my_FU;
+      sharability_element   += computeSharabilityParameter(&sharability, child_FU->future_parents, act_FU, DG);
+      sharability_parameter += sharability;
+      sharability_element   += computeSharabilityParameter(&sharability, future_children, child_FU, DG);
+      sharability_parameter += sharability;
+    }
+  }
+
+  flag = 1;
+  for ( auto reg_it = reg_pool.begin(); reg_it != reg_pool.end(); reg_pool++ ) {
+    actual_reg = *reg_it;
+    actual_cost = 0;
+    int_sharability_parameter = sharability_parameter;
+    int_sharability_element   = sharability_element;
+    if ( compatible_register(actual_reg, t, t + rt[ops[node].type]  - 1) ) {
+      flag = 0;
+      for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
+        if ( (*it)->schl == true ) {
+          number_of_schld_children++;
+          child_FU = (*it)->my_FU;
+          if ( actual_reg->out_FU.find(child_FU->id) == actual_reg->out_FU.end() ) {
+            actual_cost += cost_mux + cost_demux;
+          }
+        }
+      }
+      actual_cost = actual_cost*sharability_parameter/(sharability_element+1);
+      for ( auto it = Reg_id->out_FU.begin(); it != Reg_id->out_FU.end(); it++ ) {
+        double sharability;
+        int_sharability_element   += computeSharabilityParameter(&sharability, (*it)->future_parents, act_FU, DG);
+        int_sharability_parameter += sharability;
+        int_sharability_element   += computeSharabilityParameter(&sharability, future_children, (*it), DG);
+        int_sharability_parameter += sharability;
+      }
+      if ( actual_reg->in_FU.find(act_FU->id) == actual_reg->in_FU.end() ) {
+        actual_cost += (cost_mux + cost_demux)*int_sharability_parameter/int_sharability_element;
+      }
+      if (min_cost == -1 || actual_cost < min_cost) {
+        min_cost = actual_cost;
+      }
+    }
+  }
+
+  if ( flag == 1 ) {
+    actual_cost = (number_of_schld_children*cost_mux + cost_demux + cost_reg)*sharability_parameter/sharability_element;
+  }
+
+
+  total_cost += actual_cost;
+
+  return total_cost;
+
+}
+
+
+int computeSharabilityParameter(double* sharability, list<int> future_elements, 
+                                FU* poss_FU, vector<vector<double>> DG) {
+
+  int parent_id;
+  int cycle;
+  int flag;
+  double dg_sum_cycle;
+  double dg_sum_mobility;
+
+  int sharability_element = 0;
+  double sharability_parameter = 0.0;
+
+  for ( auto it = future_elements.begin(); it != future_elements.end(); it++ ) {
+    node_id = *it;
+    if ( ops[node_id].type == poss_FU->type ) {
+      sharability_element++;
+      cycle = 0;
+      dg_sum_cycle = 0;
+      dg_sum_mobility = 0;
+      for ( int cc = ops[node_id].asap; cc <= ops[node_id].alap; cc++ ) {
+        flag = 1;
+        for ( int time = cc; time <= cc + d - 1; cc++ ) {
+          if ( poss_FU->busy[time] == 1) {
+            flag = 0;
+          }
+        }
+        if ( flag == 1 ) {
+          dg_sum_cycle += DG[ops[poss_FU->type]][cc];
+          cycle += 1;
+        }
+        dg_sum_cycle += DG[ops[poss_FU->type]][cc];
+      }
+      mobility = ops[node_id].asap - ops[node_id].alap + 1;
+      sharability_parameter += ((mobility-cycle)/(mobility))*((dg_sum_cycle)/(dg_sum_mobility));
+    }
+  }
+
+  *sharability = sharability_parameter;
+  return sharability_element;
+
+
+}
 
 
 
