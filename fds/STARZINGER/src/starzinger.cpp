@@ -98,6 +98,7 @@ G_Node* input_node;
 int* top_order;
 
 int rt[tnum];                         // delay info
+vector< list<FU*> > FU_list(tnum, list<FU*> () );
 
 int mux_cost = 6;
 int demux_cost = 6;
@@ -116,7 +117,7 @@ void readGraphInfo(char **argv, int DFG, int *edge_num);  // Read-DFG info: node
 void output_schedule(string str);                         // print the final scheduling result
 void print_schedule();
 void print_reg_allocation();
-
+void print_binding();
 // FDS Core Functions
 void FDS(int max_depth);      // main function FDS
 void getLC();                 // obtain LC
@@ -200,6 +201,7 @@ int main(int argc, char **argv) {
   cout << "*********************************************" << endl;
   print_schedule();
   print_reg_allocation();
+  print_binding();
   delete[] ops;
 
   return 0;
@@ -443,7 +445,6 @@ void FDS(int max_depth) {
   // initialize DG by tnum X (LC+1) note that, starts from cc = 0 to LC, but we don't do compuation in row cc = 0.
   vector< vector<double> > DG(tnum, vector<double>(LC + 1, 0)); // DG[TYPE][CC]
   
-  vector< list<FU*> > FU_list(tnum, list<FU*> () );
   
   double bestForce = 0.0; // best scheduling force value
   int bestNode = -1, bestT = -1, iteration = 0;    // best Node ID and T (cc), # of iteration;
@@ -774,7 +775,7 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
     ops[node].my_reg = actual_reg;      // Set the new register as the register 
                                         // of the variable associated to the operation node.
     best_FU->demux_size++;              // Increase size of demux at the output of the current FU.
-    actual_reg->busy.resize(LC+1);
+    actual_reg->busy.resize(LC+2);
     for (int cc = 0; cc <= LC; cc++) {
       actual_reg->busy[cc] = 0;
     }
@@ -791,6 +792,7 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
       best_FU->demux_size++;             // Increase number of output of the FU
     }
     // If the register is already connected to the FU no action has to be made.
+    
   }
   // --------------------------- OUTPUT INTERCONNECTIONS --------------------------------
   for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
@@ -826,9 +828,9 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
   // The lifetime are represented as closed interval [lifetime_begin,lifetime_end]
   lifetime_begin = time + rt[ops[node].type];
   max_lifetime_end = -1;
-  if ( ops[node].child.size() == 0 ) {
+  if ( ops[node].child.empty() == true ) {
     // If it has no children the variable should be kept until the end.
-    max_lifetime_end = LC;
+    max_lifetime_end = LC + 1;
   }
   for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
     temporary_lifetime_end = (*it)->alap + rt[(*it)->type] - 1;
@@ -1162,10 +1164,24 @@ void restore_lifetime(int parent_id, int old_lifetime_end) {
 }
 
 
-bool compatible_register(Reg* reg, int left_time, int right_time ) {
+bool compatible_register(Reg* reg, int node, int lifetime_begin ) {
 
+  int max_lifetime_end;
+  int temporary_lifetime_end;
 
-  for ( int cc = left_time; cc <= right_time; cc++ ) {
+  max_lifetime_end = -1;
+  for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
+    temporary_lifetime_end = (*it)->alap + rt[(*it)->type] - 1;
+    if ( temporary_lifetime_end > max_lifetime_end ) {
+      max_lifetime_end = temporary_lifetime_end;
+    }
+  }
+
+  if ( ops[node].child.empty() ) {
+    max_lifetime_end = LC + 1;
+  }
+
+  for ( int cc = lifetime_begin; cc <= max_lifetime_end; cc++ ) {
     if ( reg->busy[cc] == 1 ) {
       return false;
     }
@@ -1278,7 +1294,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
     actual_cost = 0;
     double int_sharability_parameter = sharability_parameter;
     int int_sharability_element   = sharability_element;
-    if ( compatible_register(actual_reg, t, t + rt[ops[node].type]  - 1) ) {
+    if ( compatible_register(actual_reg, node, t + rt[ops[node].type]) ) {
       flag = 0;
       for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
         if ( (*it)->schl == true ) {
@@ -1374,6 +1390,7 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
 
 void print_reg_allocation() {
 
+  int total = 0;
 
   cout << "------- REG. INFORMATION --------" << endl;
   cout << "# of registers: " << reg_pool.size() << endl;
@@ -1386,12 +1403,45 @@ void print_reg_allocation() {
       }
     }
     cout << "----------------" << endl;
-  } 
+  }
 
+  
+  for ( auto it = reg_pool.begin(); it != reg_pool.end(); it++ ) {
+    total += (*it)->mux_size - 1;
+    cout << "REG " << (*it)->id << " | # of input " << (*it)->mux_size;
+    cout << " | # of output " << (*it)->out_FU.size() << endl;
+  }
 
-
-
-
+  cout << "Total mux regs: " << total << endl;
   return;
 
 }
+
+
+void print_binding() {
+
+
+  int total = 0;
+
+  cout << "--------------- RESOURCES OCCUPATION ---------" << endl;
+  for ( int i = 0; i < tnum; i++ ) {
+    for (auto it = FU_list[i].begin(); it != FU_list[i].end(); it++ ) {
+      total += (*it)->port0.size() + (*it)->port1.size() - 2;
+      cout << "Res: " << (*it)->id << " type: " << (*it)->type << endl;
+      for (int j = 0; j < opn; j++) {
+        if ( ops[j].my_FU->id == (*it)->id ) {
+          cout << j << endl;
+        } 
+      } 
+      cout << "-------------------" << endl;
+    }
+  }
+
+  cout << "Total number of mux in input to FUs: " << total << endl;
+
+
+}
+
+
+
+
