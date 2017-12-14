@@ -567,87 +567,159 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
   int port;
   G_node p1, p2;
 
+  // --------------------- UPDATE BUSY TIME OF THE FU ----------------------------
+  // Set busy the functional unit for the time needed to execute the operation
+  // node.
   for ( int cc = time; cc <= time + rt[best_FU->type] - 1; cc++ ) {
     best_FU->busy[cc] = 1;
   }
 
-  p1 = ops[node].parent.
-
+  // ------------------ UPDATE INPUT CONNECTION TO THE FU ------------------------
+  // Extract the 2 parents. Assumption: each operation only 2 parents since
+  // each FU has only two input ports.
   count = 0;
   for ( auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++ ) {
     if ( count == 0 ) {
-      p1 = *it;
+      p1 = (*it);
     } else {
-      p2 = *it;
+      p2 = (*it);
     }
     count++;
   }
-    
-  if ( p1.schl && p2.schl  ) {
+
+  // Check if parents already scheduled to create the connection.
+  // Try to minimize the congestion to the input ports of the FU.
+  if ( p1.schl && p2.schl ) {
     a = (best_FU->port0.find(p1.my_reg->id) != best_FU->port0.end()) ? 1 : 0;
     b = (best_FU->port1.find(p1.my_reg->id) != best_FU->port1.end()) ? 1 : 0;
     c = (best_FU->port0.find(p2.my_reg->id) != best_FU->port0.end()) ? 1 : 0;
     d = (best_FU->port1.find(p2.my_reg->id) != best_FU->port1.end()) ? 1 : 0;
-    
-    y0 = ((~b & ~c & ~d ) | (a & ~b & ~d) | (a & ~c & ~d))& 0x01;
+
+    y0 = ((~b & ~c & ~d ) | (a & ~b & ~d) | (a & ~c & ~d)) & 0x01;
     y1 = ((~a & b  & ~c )) & 0x01;
     y2 = ((~a & ~b  & c & ~d ))& 0x01;
     y3 = ((~a & ~b  & ~c) | (~a & ~b & d)) & 0x01;
-  
+
     outcome = 2*y3 + y2;
     if ( outcome == 1 ) {
       // Crea connession tra p1 e porta1
+      best_FU->port1.insert(p1.my_reg->id); 
     } else if ( outcome == 2 ) {
       // Crea connessione tra p1 e porta0
+      best_FU->port0.insert(p1.my_reg->id);
     }
 
     outcome = 2*y1 + y0;
     if ( outcome == 1 ) {
       // Crea connession tra p2 e porta1
+      best_FU->port1.insert(p2.my_reg->id); 
     } else if ( outcome == 2 ) {
       // Crea connessione tra p2 e porta0
+      best_FU->port0.insert(p2.my_reg->id);
     }
 
   } else {
-  
-    
-  
-  
-  
-  
-  
-  }
-
-  if ( (*it)->schl == true ) {
-      actual_reg = (*it)->my_reg;
-      if ( actual_reg->out_FU.find(best_FU->id) != actual_reg->out_FU.end() ) {
-        port0_connection =
-          (best_FU->port0.find(actual_reg->id)  != best_FU->port0.end()) ? 1 : 0;
-        port1_connection =
-          (best_FU->port1.find(actual_reg->id)  != best_FU->port1.end()) ? 1 : 0;
-
-        if ( ) 
-        actual_reg->out_FU.insert(best_FU->id);
-        best_FU->mux_size++;
-        best_FU->parent.push(*it);
-        (*it)->my_FU->child.push(best_FU);
+    // Only one parent is scheduled. Than check if it is already
+    // connected to one port or if the connection has to be made
+    // connect it to the less congestioned port.
+    if ( p1.schl == true ) {
+      if (  best_FU->port0.find(p1.my_reg->id) == best_FU->port0.end() && 
+            best_FU->port1.find(p1.my_reg->id) == best_FU->port1.end() ) {
+        // If there is no connection
+        if ( best_FU->port0.size() > best_FU->port1.size() ) {
+          best_FU->port1.insert(p1.my_reg->id);
+        } else {
+          best_FU->port0.insert(p1.my_reg->id);
+        }
       }
     }
-
-  if ( best_reg == null ) {
-    actual_reg = new Reg;
-    actual_reg->id = id_reg++;
-    actual_reg->in_FU.insert(best_FU);
-    actual_reg->mux_size++;
-    ops[node].reg = actual_reg;
-    best_FU->demux_size++;
-  } else {
-    if ( best_reg->in_FU.find(best_FU) == best_reg->in_FU.end() ) {
-      best_reg->in_FU.insert(bestFU);
-      best_reg->mux_size++;
-      bestFU->demuz_size++;
+    if ( p2.schl == true ) {
+      if (  best_FU->port0.find(p2.my_reg->id) == best_FU->port0.end() && 
+            best_FU->port1.find(p2.my_reg->id) == best_FU->port1.end() ) {
+        // If there is no connection
+        if ( best_FU->port0.size() > best_FU->port1.size() ) {
+          best_FU->port1.insert(p2.my_reg->id);
+        } else {
+          best_FU->port0.insert(p2.my_reg->id);
+        }
+      }
     }
   }
+
+
+  // ----------------------- UPDATE INTERCONNECTIONS REGISTER --------------------------
+  // Verify/insert connection to the output register
+  if ( best_reg == NULL ) {
+    // This means that a new register has to be created.
+    actual_reg = new Reg;
+    actual_reg->id = id_reg++;          // Global identifier for the register.
+    actual_reg->in_FU.insert(best_FU);  // The output port of the actual FU will
+                                        // be connected as an input of the new register.
+    actual_reg->mux_size++;             // Actually mux size simply count number of input of reg.
+    ops[node].reg = actual_reg;         // Set the new register as the register 
+                                        // of the variable associated to the operation node.
+    best_FU->demux_size++;              // Increase size of demux at the output of the current FU.
+    best_reg = actual_reg;
+    // TODO: check if the register has to be included in the output list
+  } else {
+    // A register already exist.
+    if ( best_reg->in_FU.find(best_FU) == best_reg->in_FU.end() ) {
+      // If the register isn't connected to the output of the current FU
+      best_reg->in_FU.insert(bestFU);   // Insert the output of FU as input of the register
+      best_reg->mux_size++;             // Increase number of input of the registers
+      bestFU->demux_size++;             // Increase number of output of the FU
+    }
+    // If the register is already connected to the FU no action has to be made.
+  }
+
+  // -------------- UPDATE LIFETIME BEST REGISTER FOR OPERATION NODE--------------
+  // The lifetime are represented as closed interval [lifetime_begin,lifetime_end]
+  lifetime_begin = time + rt[ops[node].type];
+  max_lifetime_end = -1;
+  for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
+    temporary_lifetime_end = (*it)->alap + rt[(*it)->type] - 1;
+    if ( temporary_lifetime_end > max_lifetime_end ) {
+      max_lifetime_end = temporary_lifetime_end;
+    }
+  }
+
+  for ( int cc = lifetime_begin; cc <= max_lifetime_end; cc++ ) {
+    best_reg->busy[cc] = 1;
+  }
+
+
+
+  // -------------- UPDATE LIFETIME PARENTS REGISTER -------------------------
+  for (auto it_p = ops[node].parent.begin(); it_p != ops[node].parent.end(); it_p++ ) {
+    if ( (*it_p)->schl == true ) {
+      parent_lifetime_end = -1;
+      for ( auto it = (*it_p)->child.begin(); it != (*it_p)->child.end(); it++ ) {
+        if ( (*it) != node ) {
+          temporary_lifetime_end = (*it)->alap + rt[(*it)->type] - 1;
+          if ( temporary_lifetime_end > parent_lifetime_end ) {
+            parent_lifetime_end = temporary_lifetime_end;
+          }
+        } else {
+          if ( lifetime_begin - 1 > parent_lifetime_end ) {
+            parent_lifetime_end = lifetime_begin - 1;
+          }
+        }
+      }
+      if ( parent_lifetime_end != (*it_p)->lifetime_end ) {
+        for (int cc = (*it)->lifetime_end; cc > parent_lifetime_end ; cc-- ) {
+          (*it_p)->my_reg->busy[cc] = 0;
+        }
+        (*it_p)->lifetime_end = parent_lifetime_end;
+      }
+    }
+  }
+
+
+  
+
+
+
+
 
   return;
 
