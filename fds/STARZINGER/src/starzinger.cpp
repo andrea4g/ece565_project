@@ -773,14 +773,6 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
 
 
 
-
-
-
-
-
-
-
-
 // get latency constraint
 void getLC() {
   LC = 0;
@@ -997,6 +989,50 @@ double computeSelfForce(int node, int t, vector<vector<double>> DG) {
 }
 
 
+int update_temp_lifetime(int parent_id, int child_id, int t) {
+
+  old_lifetime_end = ops[parent_id].lifetime_end;
+  new_child_lifetime = t + rt[ops[child_id].type] - 1;
+  max_lifetime_end = -1;
+  for ( auto it = ops[parent_id].child.begin(); it != ops[parent_id].child.end(); it++ ) {
+    if ( (*it)->id == child_id ) {
+      if ( new_child_lifetime > max_lifetime_end ) {
+        max_lifetime_end = new_child_lifetime;
+      }
+    } else {
+      temporary_lifetime_end = (*it)->alap + rt[(*it)->type] - 1;
+      if ( temporary_lifetime_end > max_lifetime_end ) {
+        max_lifetime_end = temporary_lifetime_end;
+      }
+    }
+  }
+
+  if ( max_lifetime_end != ops[parent_id].lifetime_end ) {
+    ops[parent_id].lifetime_end = max_lifetime_end;
+    for ( int cc = old_lifetime_end; cc > max_lifetime_end; cc-- ) {
+      ops[parent_id].my_reg->busy[cc] = 0;
+    }
+  }
+
+  return old_lifetime_end;
+
+}
+
+
+void restore_lifetime(int parent_id, int old_lifetime_end) {
+
+  if ( ops[parent_id].lifetime_end != old_lifetime_end ) {
+    for ( int cc = old_lifetime_end; cc > ops[parent_id].lifetime_end; cc-- ) {
+      ops[parent_id].my_reg->busy[cc] = 1;
+    }
+  }
+ 
+  ops[parent_id].lifetime_end = old_lifetime_end;
+
+  return;
+
+}
+
 double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, Reg** best_reg) {
 
   list<int> future_parents;
@@ -1016,7 +1052,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
     } else {
       // In case some of my parents is already scheduled, update possibly the lifetime
       // of the variable since my ALAP now is changed ( temporarily ) to t.
-      old_end_cycle[i] = update_temp_lifetime((*it), t , node);
+      old_end_cycle[i] = update_temp_lifetime((*it)->id, node, t);
       i++;
     }
   }
@@ -1133,7 +1169,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
   i = 0;
   for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++) {
     if ( (*it)->schl == true ) {
-      restore_lifetime((*it), old_end_cycle[i]);
+      restore_lifetime((*it)->id, old_end_cycle[i]);
       i++;
     }
   }
