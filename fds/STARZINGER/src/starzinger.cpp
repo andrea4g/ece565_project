@@ -711,11 +711,11 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
       max_lifetime_end = temporary_lifetime_end;
     }
   }
-
+  
+  ops[node].lifetime_end = max_lifetime_end;
   for ( int cc = lifetime_begin; cc <= max_lifetime_end; cc++ ) {
     best_reg->busy[cc] = 1;
   }
-
 
 
   // -------------- UPDATE LIFETIME PARENTS REGISTER -------------------------
@@ -743,7 +743,27 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
     }
   }
 
-
+  // --------------------- UPDATE FUTURE THINGS -------------------------------
+  // Delete from future child of the parent FU (therefore for the parent node that are
+  // scheduled ) the current node
+  for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++ ) {
+    if ( (*it)->schl == true ) {
+      (*it)->my_FU->future_child.erase(node);
+    } else {
+      // Add to the future parent of this FU the parents of node that are not scheduled
+      best_FU->future_parent.insert((*it)->id);
+    }
+  }
+  // Delete from future parent of the child FU (therefore for the child node that are
+  // scheduled ) the current node
+  for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
+    if ( (*it)->schl == true ) {
+      (*it)->my_FU.future_parent.erase(node);
+    } else {
+      // Add to the future child of this FU the children of node that are not scheduled
+      best_FU->future_child.insert((*it)->id);
+    }
+  }
 
 
   return;
