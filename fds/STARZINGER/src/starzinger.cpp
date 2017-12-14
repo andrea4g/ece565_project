@@ -648,6 +648,7 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
 
 
   // ----------------------- UPDATE INTERCONNECTIONS REGISTER --------------------------
+  // --------------------------- INPUT INTERCONNECTIONS --------------------------------
   // Verify/insert connection to the output register
   if ( best_reg == NULL ) {
     // This means that a new register has to be created.
@@ -671,6 +672,34 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
     }
     // If the register is already connected to the FU no action has to be made.
   }
+  // --------------------------- OUTPUT INTERCONNECTIONS --------------------------------
+  for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
+    if ( (*it)->schl == true ) {
+      // If the child is scheduled I have to check if exists already an interconnection
+      // between my output register and the FU of the child ON THE RIGHT PORT!!!
+      for ( auto it_p = (*it)->parent.begin(); it_p != (*it)->parent.end(); it_p++ ) {
+        if ( (*it_p)->id != (*it)->id ) {
+          if ( (*it_p)->schl == true  ) {
+            // If the other parent is scheduled than for sure it is connected to one of the 2 ports
+            // of the common child. Find the port than connect best reg to the other port
+            if (  (*it)->my_FU->port0.find((*it_p)->my_reg->id) != (*it)->my_FU->port0.end() ) {
+                (*it)->my_FU->port1.insert(best_reg->id);
+            } else {
+                (*it)->my_FU->port0.insert(best_reg->id);
+            }
+          } else {
+            // If it is not scheduled I choose the less congestioned port
+            if ( (*it)->my_FU->port0.size() > (*it)->my_FU->port1.size() ) {
+              (*it)->my_FU->port1.insert(best_reg->id);
+            } else {
+              (*it)->my_FU->port0.insert(best_reg->id);
+            }
+          }
+        }
+      }
+    }
+  }
+
 
   // -------------- UPDATE LIFETIME BEST REGISTER FOR OPERATION NODE--------------
   // The lifetime are represented as closed interval [lifetime_begin,lifetime_end]
@@ -713,10 +742,6 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time ) {
       }
     }
   }
-
-
-  
-
 
 
 
