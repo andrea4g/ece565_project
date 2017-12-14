@@ -98,6 +98,7 @@ G_Node* input_node;
 int* top_order;
 
 int rt[tnum];                         // delay info
+int ct[tnum];                         // area info
 vector< list<FU*> > FU_list(tnum, list<FU*> () );
 
 int mux_cost = 6;
@@ -283,6 +284,18 @@ void GET_LIB() {
   rt[6] = 1;
   rt[7] = 1;
   rt[8] = 8;
+
+  ct[0] = 1368;
+  ct[1] = 96;
+  ct[2] = 8568;
+  ct[3] = 420;
+  ct[4] = 288;
+  ct[5] = 1672;
+  ct[6] = 96;
+  ct[7] = 1476;
+  ct[8] = 15048;
+
+
 }
 
 /*----------------------------------------------------------------------------*/
@@ -454,7 +467,7 @@ void FDS(int max_depth) {
   int busy_flag;
   int res_id = 0;
   int reg_id = 0;
-  int min_cost;
+  double min_cost;
   Reg* actual_reg;
   FU* actual_FU = NULL;
   FU* min_FU;
@@ -497,12 +510,13 @@ void FDS(int max_depth) {
             considered_FU.push(*it);
           }
         }
-        
+        min_FU_new = 0;
         min_cost = -1;
         min_FU = NULL;
         min_reg = NULL;
         if ( considered_FU.empty() == true ) {
           actual_FU = new FU;
+          min_FU_new = 1;
           actual_FU->type = ops[i].type;
           actual_FU->id = res_id;
           actual_FU->busy.resize(LC+1);
@@ -511,6 +525,7 @@ void FDS(int max_depth) {
             actual_FU->busy[i] = 0;
           }
           min_cost = computeBindForce(i,ops[i].asap,actual_FU,DG, &actual_reg);
+          //min_cost += ct[ops[i].type];
           min_FU = actual_FU;
           min_reg = actual_reg;
         } else {
@@ -529,6 +544,10 @@ void FDS(int max_depth) {
         allocate(min_FU, min_reg, i, ops[i].alap, reg_id);
         if ( min_reg == NULL ) {
           reg_id++;
+        }
+        if ( min_FU_new == 1 ) {
+          res_id++;
+          FU_list[ops[i].type].push_back(min_FU);
         }
         ops[i].my_FU = min_FU;
       }
@@ -584,6 +603,8 @@ void FDS(int max_depth) {
             actual_FU->busy[i] = 0;
           }
           min_cost = computeBindForce(n,t,actual_FU,DG, &actual_reg);
+          //min_cost += ct[ops[n].type];
+          
           min_FU = actual_FU;
           min_reg = actual_reg;
         } else {
@@ -1259,7 +1280,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
     }
   }
 
-  total_cost += actual_cost*sharability_parameter/(sharability_element+1);
+  total_cost += (double)actual_cost*sharability_parameter/((double) sharability_element+1);
 
 
 
@@ -1305,7 +1326,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
           }
         }
       }
-      actual_cost = actual_cost*sharability_parameter/(sharability_element+1);
+      actual_cost = (double) actual_cost*sharability_parameter/((double)sharability_element+1);
       for ( auto it = actual_reg->out_FU.begin(); it != actual_reg->out_FU.end(); it++ ) {
         double sharability;
         int_sharability_element   += computeSharabilityParameter(&sharability, (*it)->future_parent, act_FU, DG);
@@ -1314,7 +1335,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
         int_sharability_parameter += sharability;
       }
       if ( actual_reg->in_FU.find(act_FU) == actual_reg->in_FU.end() ) {
-        actual_cost += (mux_cost + demux_cost)*int_sharability_parameter/(int_sharability_element+1);
+        actual_cost +=  ( (double) mux_cost + demux_cost)*int_sharability_parameter/((double)int_sharability_element+1);
       }
       if (min_cost == -1 || actual_cost < min_cost) {
         min_cost = actual_cost;
@@ -1324,7 +1345,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
   }
 
   if ( flag == 1 ) {
-    actual_cost = (number_of_schld_children*mux_cost + demux_cost + reg_cost)*sharability_parameter/(sharability_element+1);
+    actual_cost = (double) (number_of_schld_children*mux_cost + demux_cost + reg_cost)*sharability_parameter/((double)sharability_element+1);
   }
 
 
@@ -1374,10 +1395,11 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
           dg_sum_cycle += DG[poss_FU->type][cc];
           cycle += 1;
         }
-        dg_sum_cycle += DG[poss_FU->type][cc];
+        dg_sum_mobility += DG[poss_FU->type][cc];
       }
       int mobility = ops[node_id].alap - ops[node_id].asap + 1;
-      sharability_parameter += ((mobility-cycle)/(mobility))*((dg_sum_cycle)/(dg_sum_mobility));
+      if ( dg_sum_mobility != 0 ) 
+        sharability_parameter += 10 + (double) ((cycle)/((double)mobility)) + ((dg_sum_cycle)/(dg_sum_mobility));
     }
   }
 
@@ -1425,6 +1447,7 @@ void print_binding() {
 
   cout << "--------------- RESOURCES OCCUPATION ---------" << endl;
   for ( int i = 0; i < tnum; i++ ) {
+    cout << "Size " << i << " " << FU_list[i].size() << endl;
     for (auto it = FU_list[i].begin(); it != FU_list[i].end(); it++ ) {
       total += (*it)->port0.size() + (*it)->port1.size() - 2;
       cout << "Res: " << (*it)->id << " type: " << (*it)->type << endl;
@@ -1438,6 +1461,29 @@ void print_binding() {
   }
 
   cout << "Total number of mux in input to FUs: " << total << endl;
+
+  
+  cout << "--------------RESOURCES PORT BINDING ---------" << endl;
+  for ( int i = 0; i < tnum; i++ ) {
+    for (auto it = FU_list[i].begin(); it != FU_list[i].end(); it++ ) {
+      cout << "R" << (*it)->id << ":" << endl;
+      cout << "\tPort0: ";
+      for ( auto pc = (*it)->port0.begin(); pc != (*it)->port0.end(); pc++ ) {
+        cout << (*pc) << " ";
+      }
+      cout << endl;
+      
+      cout << "\tPort1: ";
+      for ( auto pc = (*it)->port1.begin(); pc != (*it)->port1.end(); pc++ ) {
+        cout << (*pc) << " ";
+      }
+      cout << endl;
+    }
+  }
+  
+
+
+
 
 
 }
