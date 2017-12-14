@@ -115,6 +115,7 @@ void Read_DFG(const int DFG, char** argv);                // Read-DFG filename
 void readGraphInfo(char **argv, int DFG, int *edge_num);  // Read-DFG info: node type, node's predecessors/successors
 void output_schedule(string str);                         // print the final scheduling result
 void print_schedule();
+void print_reg_allocation();
 
 // FDS Core Functions
 void FDS(int max_depth);      // main function FDS
@@ -198,7 +199,7 @@ int main(int argc, char **argv) {
   output_schedule(outputfile);  //output function print output file
   cout << "*********************************************" << endl;
   print_schedule();
-
+  print_reg_allocation();
   delete[] ops;
 
   return 0;
@@ -227,7 +228,7 @@ void print_schedule() {
     }
   }
 
-  for ( int i = 0; i < 0; i++ ) {
+  for ( int i = 0; i < 9; i++ ) {
     max_op[i] = 0;
   }
 
@@ -449,6 +450,7 @@ void FDS(int max_depth) {
   double temp = 0.0, force = 0.0; //newP/oldP for the compuataion of force
   int flag = 0;
 
+  int busy_flag;
   int res_id = 0;
   int reg_id = 0;
   int min_cost;
@@ -484,13 +486,13 @@ void FDS(int max_depth) {
         ops[i].schl_time = ops[i].asap;
         ops[i].schl = true;
         for ( auto it = FU_list[ops[i].type].begin(); it != FU_list[ops[i].type].end(); it++ ) {
-          flag = 1;
+          busy_flag = 1;
           for (int cc = ops[i].asap; cc <= ops[i].asap + rt[ops[i].type] -1; cc++ ) {
             if ( (*it)->busy[cc] == 1 ) {
-              flag = 0;
+              busy_flag = 0;
             }
           }
-          if ( flag == 1 ) {
+          if ( busy_flag == 1 ) {
             considered_FU.push(*it);
           }
         }
@@ -501,8 +503,9 @@ void FDS(int max_depth) {
         if ( considered_FU.empty() == true ) {
           actual_FU = new FU;
           actual_FU->type = ops[i].type;
-          actual_FU->id = res_id++;
+          actual_FU->id = res_id;
           actual_FU->busy.resize(LC+1);
+          actual_FU->demux_size = 0;
           for (int i = 0; i < LC + 1; i++ ) {
             actual_FU->busy[i] = 0;
           }
@@ -553,13 +556,13 @@ void FDS(int max_depth) {
         force += computeParentForces(n, t, DG, 1, max_depth);
 
         for ( auto it = FU_list[ops[n].type].begin(); it != FU_list[ops[n].type].end(); it++ ) {
-          flag = 1;
+          busy_flag = 1;
           for (int cc = t; cc <= t + rt[ops[n].type] -1; cc++ ) {
             if ( (*it)->busy[cc] == 1 ) {
-              flag = 0;
+              busy_flag = 0;
             }
           }
-          if ( flag == 1 ) {
+          if ( busy_flag == 1 ) {
             considered_FU.push(*it);
           }
         }
@@ -573,8 +576,9 @@ void FDS(int max_depth) {
           actual_FU = new FU;
           min_FU_new = 1;
           actual_FU->type = ops[n].type;
-          actual_FU->id = res_id++;
+          actual_FU->id = res_id;
           actual_FU->busy.resize(LC+1);
+          actual_FU->demux_size = 0;
           for (int i = 0; i < LC + 1; i++ ) {
             actual_FU->busy[i] = 0;
           }
@@ -623,9 +627,9 @@ void FDS(int max_depth) {
       allocate(best_FU, best_reg, bestNode, bestT, reg_id);
       if ( best_reg == NULL ) {
         reg_id++;
-        reg_pool.push_back(ops[bestNode].my_reg);
       }
       if ( best_FU_new == 1 ) {
+        res_id++;
         FU_list[best_FU->type].push_back(best_FU);
       }
       ops[bestNode].my_FU = best_FU;
@@ -721,6 +725,9 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
       best_FU->port0.insert(p2->my_reg->id);
     }
 
+    p1->my_reg->out_FU.insert(best_FU);
+    p2->my_reg->out_FU.insert(best_FU);
+
   } else {
     // Only one parent is scheduled. Than check if it is already
     // connected to one port or if the connection has to be made
@@ -735,6 +742,7 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
           best_FU->port0.insert(p1->my_reg->id);
         }
       }
+      p1->my_reg->out_FU.insert(best_FU);
     }
     if ( p2->schl == true ) {
       if (  best_FU->port0.find(p2->my_reg->id) == best_FU->port0.end() && 
@@ -746,6 +754,7 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
           best_FU->port0.insert(p2->my_reg->id);
         }
       }
+      p2->my_reg->out_FU.insert(best_FU);
     }
   }
 
@@ -757,7 +766,8 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
     // This means that a new register has to be created.
     actual_reg = new Reg;
     reg_pool.push_back(actual_reg);
-    actual_reg->id = id_reg;          // Global identifier for the register.
+    actual_reg->mux_size = 0;
+    actual_reg->id = id_reg;            // Global identifier for the register.
     actual_reg->in_FU.insert(best_FU);  // The output port of the actual FU will
                                         // be connected as an input of the new register.
     actual_reg->mux_size++;             // Actually mux size simply count number of input of reg.
@@ -773,6 +783,7 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
     // TODO: check if the register has to be included in the output list
   } else {
     // A register already exist.
+    ops[node].my_reg = best_reg;
     if ( best_reg->in_FU.find(best_FU) == best_reg->in_FU.end() ) {
       // If the register isn't connected to the output of the current FU
       best_reg->in_FU.insert(best_FU);   // Insert the output of FU as input of the register
@@ -784,10 +795,11 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
   // --------------------------- OUTPUT INTERCONNECTIONS --------------------------------
   for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
     if ( (*it)->schl == true ) {
+      best_reg->out_FU.insert((*it)->my_FU);
       // If the child is scheduled I have to check if exists already an interconnection
       // between my output register and the FU of the child ON THE RIGHT PORT!!!
       for ( auto it_p = (*it)->parent.begin(); it_p != (*it)->parent.end(); it_p++ ) {
-        if ( (*it_p)->id != (*it)->id ) {
+        if ( (*it_p)->id != node ) {
           if ( (*it_p)->schl == true  ) {
             // If the other parent is scheduled than for sure it is connected to one of the 2 ports
             // of the common child. Find the port than connect best reg to the other port
@@ -814,6 +826,10 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
   // The lifetime are represented as closed interval [lifetime_begin,lifetime_end]
   lifetime_begin = time + rt[ops[node].type];
   max_lifetime_end = -1;
+  if ( ops[node].child.size() == 0 ) {
+    // If it has no children the variable should be kept until the end.
+    max_lifetime_end = LC;
+  }
   for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
     temporary_lifetime_end = (*it)->alap + rt[(*it)->type] - 1;
     if ( temporary_lifetime_end > max_lifetime_end ) {
@@ -1245,9 +1261,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
   for ( auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
     if ( (*it)->schl == true ) {
       double sharability;
-      cout << "A:" << (*it)->id << endl;
       child_FU = (*it)->my_FU;
-      cout << "Addr: " << child_FU << " " << (*it)->my_FU << endl;
       sharability_element   += computeSharabilityParameter(&sharability, child_FU->future_parent, act_FU, DG);
       sharability_parameter += sharability;
       sharability_element   += computeSharabilityParameter(&sharability, future_children, child_FU, DG);
@@ -1346,7 +1360,7 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
         }
         dg_sum_cycle += DG[poss_FU->type][cc];
       }
-      int mobility = ops[node_id].asap - ops[node_id].alap + 1;
+      int mobility = ops[node_id].alap - ops[node_id].asap + 1;
       sharability_parameter += ((mobility-cycle)/(mobility))*((dg_sum_cycle)/(dg_sum_mobility));
     }
   }
@@ -1358,7 +1372,26 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
 }
 
 
+void print_reg_allocation() {
+
+
+  cout << "------- REG. INFORMATION --------" << endl;
+  cout << "# of registers: " << reg_pool.size() << endl;
+
+  for ( auto it = reg_pool.begin(); it != reg_pool.end(); it++ ) {
+    cout << "REG " << (*it)->id << endl;
+    for (auto j = 0; j < opn; j++) {
+      if ( ops[j].my_reg->id == (*it)->id ) {
+        cout << j << endl;
+      }
+    }
+    cout << "----------------" << endl;
+  } 
 
 
 
 
+
+  return;
+
+}
