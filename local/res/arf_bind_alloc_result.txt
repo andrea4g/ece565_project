@@ -1,6 +1,7 @@
 For DFG: res/arf_bind_alloc_result.txt
-Total # of Registers: 36
-Total # of 2-1 Mux: 64
-Total # of 2-1 Demux: 112
-Max Mux size: 3
-Max Demux size: 2
+Total # of Registers: 23
+Total # of 2-1 Mux: 128
+Total # of 2-1 Demux: 176
+Max Mux size: 4
+Max Demux size: 4
+Total area (mux + reg): 10656

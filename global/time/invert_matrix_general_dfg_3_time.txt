@@ -1,2 +1,1 @@
-Elapsed time FDS: 36.0455 s
-Elapsed time Binding and Register alloation: 0.0016667 s
+Elapsed time FDS: 2.98594 s

@@ -1,6 +1,7 @@
 For DFG: res/feedback_points_dfg_7_bind_alloc_result.txt
-Total # of Registers: 69
-Total # of 2-1 Mux: 144
-Total # of 2-1 Demux: 336
+Total # of Registers: 53
+Total # of 2-1 Mux: 160
+Total # of 2-1 Demux: 464
 Max Mux size: 3
-Max Demux size: 3
+Max Demux size: 5
+Total area (mux + reg): 24096

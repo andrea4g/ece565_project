@@ -1,6 +1,7 @@
 For DFG: res/hal_bind_alloc_result.txt
-Total # of Registers: 15
+Total # of Registers: 13
 Total # of 2-1 Mux: 64
-Total # of 2-1 Demux: 16
-Max Mux size: 2
-Max Demux size: 2
+Total # of 2-1 Demux: 80
+Max Mux size: 3
+Max Demux size: 3
+Total area (mux + reg): 5856

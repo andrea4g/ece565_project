@@ -28,3 +28,5 @@ R5 0
 R6 0
 R7 0
 R8 0
+Total Fu: 6
+Total area: 37008
