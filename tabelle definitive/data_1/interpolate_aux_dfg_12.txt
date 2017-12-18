@@ -1,0 +1,24 @@
+DFG: data/interpolate_aux_dfg_12.txt
+
+# FU: 40
+Area Fu: 163472
+
+Time FDS: 0.0274967 [s]
+
+
+
+DFG: data/interpolate_aux_dfg_12.txt
+
+# registers: 96
+Area registers: 36864
+
+
+# mux: 2064
+Area mux: 12384
+
+
+# demux: 1072
+Area demux: 6432
+
+
+Time Bind Alloc: 0.0008329 [s]

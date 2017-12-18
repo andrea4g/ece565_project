@@ -1,0 +1,24 @@
+DFG: data/arf.txt
+
+# FU: 6
+Area Fu: 37008
+
+Time FDS: 0.0685533 [s]
+
+
+
+DFG: data/arf.txt
+
+# registers: 16
+Area registers: 6144
+
+
+# mux: 480
+Area mux: 2880
+
+
+# demux: 208
+Area demux: 1248
+
+
+Time Bind Alloc: 0.0001259 [s]

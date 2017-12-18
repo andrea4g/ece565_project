@@ -1,0 +1,9 @@
+DFG: data/matmul_dfg_3.txt
+
+# FU: 20
+Area Fu: 87984
+
+Time FDS: 0.238828 [s]
+
+
+

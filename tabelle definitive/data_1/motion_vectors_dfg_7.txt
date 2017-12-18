@@ -1,0 +1,24 @@
+DFG: data/motion_vectors_dfg_7.txt
+
+# FU: 18
+Area Fu: 94688
+
+Time FDS: 0.0017567 [s]
+
+
+
+DFG: data/motion_vectors_dfg_7.txt
+
+# registers: 28
+Area registers: 10752
+
+
+# mux: 384
+Area mux: 2304
+
+
+# demux: 176
+Area demux: 1056
+
+
+Time Bind Alloc: 0.0001841 [s]

@@ -1,0 +1,24 @@
+DFG: data/horner_bezier_surf_dfg_12.txt
+
+# FU: 5
+Area Fu: 20272
+
+Time FDS: 0.0161526 [s]
+
+
+
+DFG: data/horner_bezier_surf_dfg_12.txt
+
+# registers: 10
+Area registers: 3840
+
+
+# mux: 320
+Area mux: 1920
+
+
+# demux: 112
+Area demux: 672
+
+
+Time Bind Alloc: 9.24e-05 [s]

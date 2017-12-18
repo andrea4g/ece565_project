@@ -1,0 +1,24 @@
+DFG: data/ewf.txt
+
+# FU: 4
+Area Fu: 19872
+
+Time FDS: 0.0914995 [s]
+
+
+
+DFG: data/ewf.txt
+
+# registers: 8
+Area registers: 3072
+
+
+# mux: 400
+Area mux: 2400
+
+
+# demux: 176
+Area demux: 1056
+
+
+Time Bind Alloc: 0.0001157 [s]

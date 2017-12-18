@@ -1,0 +1,9 @@
+DFG: data/hal.txt
+
+# FU: 5
+Area Fu: 20272
+
+Time FDS: 0.0023053 [s]
+
+
+

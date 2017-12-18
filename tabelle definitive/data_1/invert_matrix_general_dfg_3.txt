@@ -1,0 +1,24 @@
+DFG: data/invert_matrix_general_dfg_3.txt
+
+# FU: 93
+Area Fu: 360140
+
+Time FDS: 0.576125 [s]
+
+
+
+DFG: data/invert_matrix_general_dfg_3.txt
+
+# registers: 154
+Area registers: 59136
+
+
+# mux: 7344
+Area mux: 44064
+
+
+# demux: 3600
+Area demux: 21600
+
+
+Time Bind Alloc: 0.0021591 [s]

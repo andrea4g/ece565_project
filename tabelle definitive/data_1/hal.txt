@@ -1,0 +1,24 @@
+DFG: data/hal.txt
+
+# FU: 6
+Area Fu: 28840
+
+Time FDS: 0.0004386 [s]
+
+
+
+DFG: data/hal.txt
+
+# registers: 10
+Area registers: 3840
+
+
+# mux: 144
+Area mux: 864
+
+
+# demux: 64
+Area demux: 384
+
+
+Time Bind Alloc: 8.04e-05 [s]

@@ -1,0 +1,9 @@
+DFG: data/ewf.txt
+
+# FU: 4
+Area Fu: 19872
+
+Time FDS: 0.0887873 [s]
+
+
+

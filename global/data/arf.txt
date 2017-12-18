@@ -1,0 +1,9 @@
+DFG: data/arf.txt
+
+# FU: 6
+Area Fu: 37008
+
+Time FDS: 0.0135687 [s]
+
+
+

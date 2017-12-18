@@ -1,0 +1,24 @@
+DFG: data/write_bmp_header_dfg_7.txt
+
+# FU: 16
+Area Fu: 36176
+
+Time FDS: 0.591137 [s]
+
+
+
+DFG: data/write_bmp_header_dfg_7.txt
+
+# registers: 76
+Area registers: 29184
+
+
+# mux: 2480
+Area mux: 14880
+
+
+# demux: 1184
+Area demux: 7104
+
+
+Time Bind Alloc: 0.0004566 [s]

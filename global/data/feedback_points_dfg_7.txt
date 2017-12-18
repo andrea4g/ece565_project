@@ -1,0 +1,9 @@
+DFG: data/feedback_points_dfg_7.txt
+
+# FU: 12
+Area Fu: 40864
+
+Time FDS: 0.0725024 [s]
+
+
+

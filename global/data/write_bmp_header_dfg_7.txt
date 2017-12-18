@@ -1,0 +1,9 @@
+DFG: data/write_bmp_header_dfg_7.txt
+
+# FU: 16
+Area Fu: 36176
+
+Time FDS: 0.62303 [s]
+
+
+

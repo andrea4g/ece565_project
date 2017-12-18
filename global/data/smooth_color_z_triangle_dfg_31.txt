@@ -1,0 +1,9 @@
+DFG: data/smooth_color_z_triangle_dfg_31.txt
+
+# FU: 20
+Area Fu: 98032
+
+Time FDS: 1.99687 [s]
+
+
+
