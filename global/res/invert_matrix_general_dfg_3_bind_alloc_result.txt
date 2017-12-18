@@ -1,0 +1,11 @@
+*****************************************
+For DFG: invert_matrix_general_dfg_3
+Total # of Registers: 154
+Total area of Registers: 59136
+Total # of 2-1 Mux: 7984
+Total area of 2-1 Mux: 47904
+Total # of 2-1 Demux: 3776
+Total area of 2-1 Demux: 22656
+Max input size for Mux: 28
+Max input size for Demux: 21
+*****************************************
