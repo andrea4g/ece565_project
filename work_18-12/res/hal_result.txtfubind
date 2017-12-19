@@ -1,0 +1,50 @@
+Type: 0
+	FU_id 2 Port0
+		10 		11 
+	FU_id 2 Port1
+		1 		12 
+Type: 0
+	FU_id 2 Port0
+		10 		11 
+	FU_id 2 Port1
+		1 		12 
+Type: 0
+	FU_id 2 Port0
+		10 		11 
+	FU_id 2 Port1
+		1 		12 
+Type: 0
+	FU_id 2 Port0
+		10 		11 
+	FU_id 2 Port1
+		1 		12 
+Type: 0
+	FU_id 3 Port0
+		1 		11 
+	FU_id 3 Port1
+		10 		12 
+Type: 0
+	FU_id 3 Port0
+		1 		11 
+	FU_id 3 Port1
+		10 		12 
+Type: 0
+	FU_id 2 Port0
+		8 		11 
+	FU_id 2 Port1
+		10 		12 
+Type: 0
+	FU_id 2 Port0
+		8 		11 
+	FU_id 2 Port1
+		10 		12 
+Type: 0
+	FU_id 2 Port0
+		8 		11 
+	FU_id 2 Port1
+		10 		12 
+Type: 0
+	FU_id 2 Port0
+		8 		11 
+	FU_id 2 Port1
+		10 		12 

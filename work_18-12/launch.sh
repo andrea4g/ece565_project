@@ -7,7 +7,7 @@ filesInCurrentDir=`ls *.txt`
 for file in $filesInCurrentDir; do
   fname=$(basename $file)
   fbname=${fname%.*}
-  ./bin/main $file res/ 1.5 -1
+  ./bin/main $file res/ 3 -1
   echo "Finished $file"
 done
 

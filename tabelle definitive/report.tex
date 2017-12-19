@@ -5,172 +5,105 @@
 \usepackage{amsmath, amsthm, amssymb, amsfonts, fancyhdr}
 \usepackage{makecell}
 \usepackage{boldline}
+\usepackage{pdflscape}
 
 \title{\textbf{Thesis report summary}}
 \author{\textbf{Andrea Gualco - agualc2 - 651262476}}
 
 \setcounter{secnumdepth}{0}
-
+\pagenumbering{gobble}
 %------------------------------------------------------------------------------
 \begin{document}
 %------------------------------------------------------------------------------
 %---------------------------------------------------------------------------------------------------------------------------------
-\huge \textbf{NB}\\
-I dati delle tabelle sopra sono stati calcolati con i file e gli script in ``global''.\\
-I dati del simultaneous sono stati calcolati con file e script dentro ``work 18-12''
-\clearpage
-\section{./fds file res 1.5 -1}
+\begin{landscape}
+\section{Results}
+The first number of the command indicate the latency constraint that multiply the ASAP time in order to obtain
+the overall latency constraint of the DFG.\\
+The second number indicate the depth of the update of the parent and child in the FDS. -1 indicate the max depth possible\\
+As underlined during the presentation the run time of the simultaneous scheduling, binding and reg allocation is much more
+higher that the sequential implementation.
+
+\subsection{./main file res/ 1.5 -1}
 \begin{table}[!h]
   \begin{center}
-  \begin{tabular}{|c|c V{3} c|c|c|c|c|c|}
+  \begin{tabular}{|c|c V{3} c|c|c|c|c|c V{3} c|c|c|c|c|c|}
     \hline
-    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{FDS + Binding/Allocation}} \\
+    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{FDS + Binding/Allocation}} & \multicolumn{6}{ c |}{\textbf{Simultaneous FDS/Binding/Allocation}} \\
     %\cline{3-14}
     \hline
-    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
+    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register}
+    & \textbf{Mux} & \textbf{DeMux}\\
     \hline
-    \texttt{arf}										  &  28 & 0.0145 &  47568 &  6 &  16 &  528 &  208 \\ \hline
-    \texttt{ewf}										  &  34 & 0.0841 &  26400 &  4 &   8 &  400 &  176 \\ \hline
-    \texttt{feedback point}					  &  53 & 0.0721 &  66016 & 12 &  42 & 1040 &  464 \\ \hline
-    \texttt{hal}										  &  11 & 0.0026 &  25648 &  5 &  10 &  176 &   80 \\ \hline
-    \texttt{horner bezier surf}			  &  18 & 0.0160 &  26704 &  5 &  10 &  320 &  112 \\ \hline
-    \texttt{interpolate aux}				  & 108 & 0.5992 & 136956 & 18 &  96 & 2320 & 1088 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 3.0441 & 331916 & 56 & 154 & 8192 & 4048 \\ \hline
-    \texttt{matmul}									  & 109 & 0.0246 & 128880 & 20 &  50 & 2464 & 1152 \\ \hline
-    \texttt{motion vectors}					  &  32 & 0.0200 &  58992 &  9 &  28 &  576 &  240 \\ \hline
-    \texttt{smooth color z triangle}	& 197 & 2.2321 & 190576 & 20 & 130 & 4832 & 2272 \\ \hline
-    \texttt{write bmp header}				  & 106 & 0.5957 &  87344 & 16 &  76 & 2480 & 1184 \\ \hline
+    \texttt{arf}										  &  28 & 0.0145 &  47568 &  6 &  16 &  528 &  208 & 0.1446 & 43794 & 6 & 17 & 32 & 11 \\ \hline
+    \texttt{ewf}										  &  34 & 0.0841 &  26400 &  4 &   8 &  400 &  176 & 0.3540 & 23610 & 4 & 9 & 34 & 13 \\ \hline
+    \texttt{feedback point}					  &  53 & 0.0721 &  66016 & 12 &  42 & 1040 &  464 & 0.7909 & 58252 & 12 & 44 & 63 & 19 \\ \hline
+    \texttt{hal}										  &  11 & 0.0026 &  25648 &  5 &  10 &  176 &   80 & 0.0186 & 24196 & 5 & 10 & 10 & 4 \\ \hline
+    \texttt{horner bezier surf}			  &  18 & 0.0160 &  26704 &  5 &  10 &  320 &  112 & 0.0965 & 24274 & 5 & 10 & 21 & 6 \\ \hline
+    \texttt{interpolate aux}				  & 108 & 0.5992 & 136956 & 18 &  96 & 2320 & 1088 & 10.9577 & 118188 & 18 & 97 & 150 & 66 \\ \hline
+    \texttt{invert matrix general}	  & 333 & 3.0441 & 331916 & 56 & 154 & 8192 & 4048 & 693.0100 & 262478 & 56 & 154 & 478 & 189 \\ \hline
+    \texttt{matmul}									  & 109 & 0.0246 & 128880 & 20 &  50 & 2464 & 1152 & 8.0944 & 108378 & 20 & 50 & 142 & 57 \\ \hline
+    \texttt{motion vectors}					  &  32 & 0.0200 &  58992 &  9 &  28 &  576 &  240 & 0.1999 & 58828 & 9 & 29 & 41 & 17 \\ \hline
+    \texttt{smooth color z triangle}	& 197 & 2.2321 & 190576 & 20 & 130 & 4832 & 2272 & 108.9940 & 150886 & 20 & 131 & 304 & 121 \\ \hline
+    \texttt{write bmp header}				  & 106 & 0.5957 &  87344 & 16 &  76 & 2480 & 1184 & 8.1511 & 67820 & 16 & 79 & 155 & 63 \\ \hline
   \end{tabular}
   \end{center}
 \end{table}
-
-\begin{table}[!h]
-  \begin{center}
-  \begin{tabular}{|c|c V{3} c|c|c|c|c|c|}
-    \hline
-    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{Simultaneous FDS/Binding/Allocation}} \\
-    %\cline{3-14}
-    \hline
-    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
-    \hline
-    \texttt{arf}									 	  &  28 & 0.167189 & 40230 & 6 & 8 & 16 & 9 \\ \hline
-    \texttt{ewf}									 	  &  34 & 0.15184 & 23124 & 4 & 8 & 19 & 11 \\ \hline
-    \texttt{feedback point}				 	  &  53 & 0.259347 & 49190 & 14 & 13 & 23 & 26 \\ \hline
-    \texttt{hal}									 	  &  11 & 0.007222 & 30400 & 6 & 4 & 1 & 3 \\ \hline
-    \texttt{horner bezier surf}		 	  &  18 & 0.0772743 & 22264 & 5 & 5 & 6 & 6 \\ \hline
-    \texttt{interpolate aux}			 	  & 108 & 1.90507 & 90038 & 19 & 26 & 48 & 55 \\ \hline
-    \texttt{invert matrix general} 	  & 333 & 126.383 & 220658 & 56 & 50 & 179 & 174 \\ \hline
-    \texttt{matmul}								 	  & 109 & 3.20904 & 98712 & 20 & 26 & 62 & 62 \\ \hline
-    \texttt{motion vectors}				 	  &  32 & 0.0465966 & 51040 & 10 & 9 & 12 & 12 \\ \hline
-    \texttt{smooth color z triangle}	& 197 & 9.11799 & 114220 & 20 & 39 & 101 & 101 \\ \hline
-    \texttt{write bmp header}				  & 106 & 1.13455 & 48560 & 15 & 34 & 45 & 71 \\ \hline
-  \end{tabular}
-  \end{center}
-\end{table}
-
-
 %---------------------------------------------------------------------------------------------------------------------------------
+
 \clearpage
-\section{./fds file res 1 -1}
+\subsection{./main file res/ 1 -1}
 \begin{table}[!h]
   \begin{center}
-  \begin{tabular}{|c|c V{3} c|c|c|c|c|c|}
+  \begin{tabular}{|c|c V{3} c|c|c|c|c|c V{3} c|c|c|c|c|c|}
     \hline
-    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{FDS + Binding/Allocation}} \\
+    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{FDS + Binding/Allocation}} & \multicolumn{6}{ c |}{\textbf{Simultaneous FDS/Binding/Allocation}} \\
     %\cline{3-14}
     \hline
-    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
+    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
     \hline
-    \texttt{arf}										  &  28 & 0.0012 &  63840 &  8 &  16 &  368 &  224\\ \hline
-    \texttt{ewf}										  &  34 & 0.0008 &  46056 &  7 &   9 &  480 &  224\\ \hline
-    \texttt{feedback point}					  &  53 & 0.0160 & 102272 & 19 &  42 &  896 &  416\\ \hline
-    \texttt{hal}										  &  11 & 0.0005 &  33928 &  6 &  10 &  144 &   64\\ \hline
-    \texttt{horner bezier surf}			  &  18 & 0.0018 &  34984 &  6 &  10 &  272 &  112\\ \hline
-    \texttt{interpolate aux}				  & 108 & 0.0283 & 219152 & 40 &  96 & 2064 & 1072\\ \hline
-    \texttt{invert matrix general}	  & 333 & 0.5783 & 484940 & 93 & 154 & 7344 & 3600\\ \hline
-    \texttt{matmul}									  & 109 & 0.0234 & 199640 & 31 &  50 & 2112 & 1088\\ \hline
-    \texttt{motion vectors}					  &  32 & 0.0019 & 108800 & 18 &  28 &  384 &  176\\ \hline
-    \texttt{smooth color z triangle}	& 197 & 0.0834 & 406432 & 72 & 130 & 3664 & 1824\\ \hline
-    \texttt{write bmp header}				  & 106 & 0.2850 & 102328 & 25 &  76 & 2416 & 1168\\ \hline
+    \texttt{arf}										  &  28 & 0.0012 &  63840 &  8 &  16 &  368 &  224 & 0.0228 & 60486 & 8 & 16 & 24 & 9 \\ \hline
+    \texttt{ewf}										  &  34 & 0.0008 &  46056 &  7 &   9 &  480 &  224 & 0.0127 & 42894 & 7 & 11 & 32 & 17 \\ \hline
+    \texttt{feedback point}					  &  53 & 0.0160 & 102272 & 19 &  42 &  896 &  416 & 0.2322 & 94850 & 19 & 42 & 55 & 20 \\ \hline
+    \texttt{hal}										  &  11 & 0.0005 &  33928 &  6 &  10 &  144 &   64 & 0.0066 & 32728 & 6 & 10 & 7 & 1 \\ \hline
+    \texttt{horner bezier surf}			  &  18 & 0.0018 &  34984 &  6 &  10 &  272 &  112 & 0.0117 & 32830 & 6 & 10 & 20 & 5 \\ \hline
+    \texttt{interpolate aux}				  & 108 & 0.0283 & 219152 & 40 &  96 & 2064 & 1072 & 3.9194 & 201182 & 40 & 96 & 102 & 39 \\ \hline
+    \texttt{invert matrix general}	  & 333 & 0.5783 & 484940 & 93 & 154 & 7344 & 3600 & 548.9270 & 423026 & 93 & 154 & 436 & 189 \\ \hline
+    \texttt{matmul}									  & 109 & 0.0234 & 199640 & 31 &  50 & 2112 & 1088 & 1.8375 & 181802 & 31 & 51 & 120 & 43 \\ \hline
+    \texttt{motion vectors}					  &  32 & 0.0019 & 108800 & 18 &  28 &  384 &  176 & 0.0321 & 105650 & 18 & 28 & 24 & 11 \\ \hline
+    \texttt{smooth color z triangle}	& 197 & 0.0834 & 406432 & 72 & 130 & 3664 & 1824 & 77.7940 & 375304 & 72 & 130 & 218 & 82 \\ \hline
+    \texttt{write bmp header}				  & 106 & 0.2850 & 102328 & 25 &  76 & 2416 & 1168 & 3.4823 & 82078 & 25 & 76 & 147 & 62 \\ \hline
   \end{tabular}
   \end{center}
 \end{table}
-
-\begin{table}[!h]
-  \begin{center}
-  \begin{tabular}{|c|c V{3} c|c|c|c|c|c|}
-    \hline
-    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{Simultaneous FDS/Binding/Allocation}} \\
-    %\cline{3-14}
-    \hline
-    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
-    \hline
-    \texttt{arf}										  &  28 & 0.0173953 & 57324 & 8 & 8 & 14 & 4 \\ \hline
-    \texttt{ewf}										  &  34 & 0.0215072 & 42840 & 7 & 11 & 23 & 17 \\ \hline
-    \texttt{feedback point}					  &  53 & 0.225937 & 85398 & 21 & 10 & 22 & 19 \\ \hline
-    \texttt{hal}										  &  11 & 0.0013495 & 30412 & 6 & 4 & 5 & 1 \\ \hline
-    \texttt{horner bezier surf}			  &  18 & 0.0056232 & 30826 & 6 & 5 & 7 & 4 \\ \hline
-    \texttt{interpolate aux}				  & 108 & 0.770629 & 170810 & 40 & 18 & 43 & 28 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 80.2428 & 391880 & 94 & 55 & 189 & 153 \\ \hline
-    \texttt{matmul}									  & 109 & 1.17117 & 177798 & 34 & 30 & 60 & 45 \\ \hline
-    \texttt{motion vectors}					  &  32 & 0.0130405 & 97874 & 18 & 8 & 10 & 9 \\ \hline
-    \texttt{smooth color z triangle}	& 197 & 16.3849 & 337210 & 72 & 33 & 95 & 64 \\ \hline
-    \texttt{write bmp header}				  & 106 & 0.586698 & 64270 & 23 & 35 & 38 & 71 \\ \hline
-  \end{tabular}
-  \end{center}
-\end{table}
-
-
 %---------------------------------------------------------------------------------------------------------------------------------
-\clearpage
-\section{./fds file res 3 -1}
-\begin{table}[!h]
-  \begin{center}
-  \begin{tabular}{|c|c V{3} c|c|c|c|c|c|}
-    \hline
-    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{FDS + Binding/Allocation}} \\
-    %\cline{3-14}
-    \hline
-    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
-    \hline
-    \texttt{arf}										  &  28 &  0.0687 &  47280 &  6 &  16 &  480 &  208 \\ \hline
-    \texttt{ewf}										  &  34 &  0.2043 &  17544 &  3 &   7 &  416 &  176 \\ \hline
-    \texttt{feedback point}					  &  53 &  0.3373 &  56752 &  9 &  42 & 1008 &  544 \\ \hline
-    \texttt{hal}										  &  11 &  0.0128 &  17080 &  4 &  10 &  160 &   96\\ \hline
-    \texttt{horner bezier surf}			  &  18 &  0.0689 &  18136 &  4 &  10 &  304 &  128 \\ \hline
-    \texttt{interpolate aux}				  & 108 &  1.4881 & 100604 & 11 &  96 & 2416 & 1168 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 12.6587 & 310328 & 53 & 154 & 7840 & 3728 \\ \hline
-    \texttt{matmul}									  & 109 &  0.8614 &  98096 & 11 &  50 & 2416 & 1136 \\ \hline
-    \texttt{motion vectors}					  &  32 &  0.0704 &  36496 &  5 &  28 &  656 &  256 \\ \hline
-    \texttt{smooth color z triangle}	& 197 &  9.2340 & 172288 & 18 & 130 & 4784 & 2128 \\ \hline
-    \texttt{write bmp header}				  & 106 &  2.0745 &  82936 & 11 &  76 & 2528 & 1168 \\ \hline
-  \end{tabular}
-  \end{center}
-\end{table}
 
+\clearpage
+\subsection{./main file res/ 3 -1}
 \begin{table}[!h]
   \begin{center}
-  \begin{tabular}{|c|c V{3} c|c|c|c|c|c|}
+  \begin{tabular}{|c|c V{3} c|c|c|c|c|c V{3} c|c|c|c|c|c|}
     \hline
-    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{Simultaneous FDS/Binding/Allocation}} \\
+    \multicolumn{2}{| c |}{\textbf{DFG}} & \multicolumn{6}{ c |}{\textbf{FDS + Binding/Allocation}} & \multicolumn{6}{ c |}{\textbf{Simultaneous FDS/Binding/Allocation}} \\
     %\cline{3-14}
     \hline
-    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
+    \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
     \hline
-    \texttt{arf}										  &  28 & 0.18091 & 39450 & 6 & 6 & 13 & 10 \\ \hline
-    \texttt{ewf}										  &  34 & 0.355295 & 13134 & 2 & 8 & 12 & 9 \\ \hline
-    \texttt{feedback point}					  &  53 & 0.615001 & 38612 & 11 & 15 & 21 & 21 \\ \hline
-    \texttt{hal}										  &  11 & 0.0589082 & 13678 & 4 & 5 & 4 & 5 \\ \hline
-    \texttt{horner bezier surf}			  &  18 & 0.153169 & 13300 & 4 & 4 & 7 & 3 \\ \hline
-    \texttt{interpolate aux}				  & 108 & 3.99208 & 64850 & 12 & 38 & 59 & 62 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 545.394 & 211598 & 53 & 72 & 180 & 181 \\ \hline
-    \texttt{matmul}									  & 109 & 2.83541 & 66320 & 11 & 21 & 56 & 56 \\ \hline
-    \texttt{motion vectors}					  &  32 & 0.194266 & 24274 & 5 & 10 & 13 & 14 \\ \hline
-    \texttt{smooth color z triangle}	& 197 & 32.6852 & 101434 & 18 & 50 & 108 & 115 \\ \hline
-    \texttt{write bmp header}				  & 106 & 3.75909 & 46198 & 9 & 40 & 46 & 75 \\ \hline
+    \texttt{arf}										  &  28 &  0.0687 &  47280 &  6 &  16 &  480 &  208 & 0.3529 & 43836 & 6 & 17 & 37 & 13 \\ \hline
+    \texttt{ewf}										  &  34 &  0.2043 &  17544 &  3 &   7 &  416 &  176 & 0.7894 & 14634 & 3 & 8 & 32 & 11 \\ \hline
+    \texttt{feedback point}					  &  53 &  0.3373 &  56752 &  9 &  42 & 1008 &  544 & 3.7495 & 47908 & 9 & 43 & 68 & 26 \\ \hline
+    \texttt{hal}										  &  11 &  0.0128 &  17080 &  4 &  10 &  160 &   96 & 0.0464 & 15658 & 4 & 10 & 14 & 5 \\ \hline
+    \texttt{horner bezier surf}			  &  18 &  0.0689 &  18136 &  4 &  10 &  304 &  128 & 0.2748 & 16864 & 4 & 13 & 23 & 5 \\ \hline
+    \texttt{interpolate aux}				  & 108 &  1.4881 & 100604 & 11 &  96 & 2416 & 1168 & 26.2902 & 80900 & 11 & 97 & 168 & 68 \\ \hline
+    \texttt{invert matrix general}	  & 333 & 12.6587 & 310328 & 53 & 154 & 7840 & 3728 & & & & & & \\ \hline
+    \texttt{matmul}									  & 109 &  0.8614 &  98096 & 11 &  50 & 2416 & 1136 & 15.9657 & 78350 & 11 & 51 & 151 & 46 \\ \hline
+    \texttt{motion vectors}					  &  32 &  0.0704 &  36496 &  5 &  28 &  656 &  256 & 0.4206 & 31792 & 5 & 29 & 45 & 19 \\ \hline
+    \texttt{smooth color z triangle}	& 197 &  9.2340 & 172288 & 18 & 130 & 4784 & 2128 & 370.0540 & 133660 & 18 & 131 & 299 & 111 \\ \hline
+    \texttt{write bmp header}				  & 106 &  2.0745 &  82936 & 11 &  76 & 2528 & 1168 & 19.8010 & 63220 & 11 & 79 & 155 & 63 \\ \hline
   \end{tabular}
   \end{center}
 \end{table}
+\end{landscape}
 
 %------------------------------------------------------------------------------
 \end{document}
