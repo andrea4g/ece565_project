@@ -89,7 +89,6 @@ string outputfile;                    // output filename
 
 int opn = 0;                          // # of operations in current DFG
 G_Node* ops;                          // operations list
-G_Node* input_node;
 int* top_order;
 int rt[tnum];                         // delay info
 int ct[tnum];                         // area info
@@ -142,6 +141,8 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
                                 FU* poss_FU, vector<vector<double>> DG);
 double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, Reg** best_reg);
 void allocate( FU* best_FU, Reg* best_Reg, int node, int time, int reg_id );
+void create_input_registers(int* reg_id);
+void output_fu_binding(string str);
 /*----------------------------------------------------------------------------*/
 /*--------------------------------MAIN----------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -161,17 +162,6 @@ int main(int argc, char **argv) {
   readGraphInfo(argv, DFG, &edge_num); //read DFG info
 
   top_order = new int[opn];
-
-  input_node = new G_Node;
-  input_node->id    = opn;                       // node ID
-  input_node->type  = -1;                     // node Function-type
-  input_node->alap  =  0;
-  input_node->asap  =  0;
-  input_node->schl  =  true;
-  input_node->schl_time = 0;
-  input_node->my_reg = new Reg;
-  input_node->lifetime_end = -1;
-  input_node->my_reg->id = -1;
 
   //cout << "TOP" << endl;
   topologicalSort();
@@ -203,6 +193,7 @@ int main(int argc, char **argv) {
   cout << "Current DFG: " << DFGname << endl;
   cout << "Latency contraint = " << LC << endl;
   output_schedule(outputfile);  //output function print output file
+  output_fu_binding(outputfile);
   cout << "*********************************************" << endl;
   print_schedule();
   print_reg_allocation();
@@ -452,13 +443,14 @@ void readGraphInfo(char **argv, int DFG, int *edge_num) {
 void output_schedule(string str) {
   // obtain filename to output
   ofstream fout_s(str, ios::out | ios::app);  // output file to save the scheduling results
-
+  ofstream fout_s2(str + "bind", ios::out | ios::app);
   if (fout_s.is_open()) {
-    fout_s << "Latency Constraint " << LC << endl;
+    fout_s << "LC " << LC << endl;
     for (int i = 0; i < opn; i++) {
       //std::cout << i << " " << ops[i].asap << endl; //after scheduling, ASAP = ALAP of each node
       //fout_s << i << " " << ops[i].schl_time  << " " << ops[i].asap << " " << ops[i].alap << " " << ops[i].type <<  endl;
-      fout_s << ops[i].id << " " << ops[i].asap << " " << ops[i].asap + rt[ops[i].type] << " " << ops[i].my_reg->id << endl;
+      fout_s << ops[i].id << " "  << ops[i].asap << endl;
+      fout_s2 << ops[i].id << " " << ops[i].asap + rt[ops[i].type] << " " << ops[i].lifetime_end  << " " << ops[i].my_reg->id << endl;
     }
     fout_s.close();
     fout_s.clear();
@@ -467,10 +459,66 @@ void output_schedule(string str) {
 
 }
 
+
+// print the results on the file
+void output_fu_binding(string str) {
+  // obtain filename to output
+  ofstream fout_s(str + "fubind", ios::out | ios::app);  // output file to save the scheduling results
+  if (fout_s.is_open()) {
+    for ( int i = 0; i < tnum; i++ ) {
+      fout_s << "Type: " << i << endl;
+      for (auto it = FU_list[i].begin(); it != FU_list[i].end(); it++ ) {
+        //std::cout << i << " " << ops[i].asap << endl; //after scheduling, ASAP = ALAP of each node
+        //fout_s << i << " " << ops[i].schl_time  << " " << ops[i].asap << " " << ops[i].alap << " " << ops[i].type <<  endl;
+        fout_s << "\tFU_id " << (*it)->id << " Port0" << endl;
+        for ( auto it_reg = (*it)->port0.begin(); it_reg != (*it)->port0.end(); it_reg++ ) {
+          fout_s << "\t\t" << (*it_reg) << " ";
+        }
+        fout_s << endl;
+        fout_s << "\tFU_id " << (*it)->id << " Port1" << endl;
+        for ( auto it_reg = (*it)->port1.begin(); it_reg != (*it)->port1.end(); it_reg++ ) {
+          fout_s << "\t\t" << (*it_reg) << " ";
+        }
+        fout_s << endl;
+      }
+      fout_s.close();
+      fout_s.clear();
+    }
+  }
+  else cout << "Unable to open file schedule file";
+
+}
+
+
+
+
 /*----------------------------------------------------------------------------*/
 
 // Force directed scheduling function
 void FDS(int max_depth) {
+
+  double bestForce = 0.0; // best scheduling force value
+  int bestNode = -1, bestT = -1, iteration = 0;    // best Node ID and T (cc), # of iteration;
+  double temp = 0.0, force = 0.0; //newP/oldP for the compuataion of force
+  double correction = 0.0;
+  int flag = 0;
+
+  int busy_flag;
+  int res_id = 0;
+  int reg_id = 0;
+  double min_cost;
+  Reg* actual_reg = NULL;
+  FU* actual_FU = NULL;
+  FU* min_FU = NULL;
+  Reg* min_reg = NULL;
+  FU* best_FU = NULL;
+  Reg* best_reg = NULL;
+  int best_FU_new;
+  int min_FU_new;
+  queue<FU*> considered_FU;
+  int diff_occupation;
+  double fu_lifetime;
+  int est_lifetime;
 
   for ( int i = 0; i < opn; i++ ) {
     ops[i].schl = false;
@@ -480,33 +528,14 @@ void FDS(int max_depth) {
   //Obtain ASAP latency first
   updateAS(ops); //Obtain ASAP for each operation
   getLC(); //obtain LC
-  input_node->lifetime_end = LC + 1;
   updateAL(ops); //Obtain ALAP for each operation
+
+  create_input_registers(&reg_id);
 
   // start FDS
   // initialize DG by tnum X (LC+1) note that, starts from cc = 0 to LC, but we don't do compuation in row cc = 0.
   vector< vector<double> > DG(tnum, vector<double>(LC + 1, 0)); // DG[TYPE][CC]
 
-
-  double bestForce = 0.0; // best scheduling force value
-  int bestNode = -1, bestT = -1, iteration = 0;    // best Node ID and T (cc), # of iteration;
-  double temp = 0.0, force = 0.0; //newP/oldP for the compuataion of force
-  int flag = 0;
-
-  int busy_flag;
-  int res_id = 0;
-  int reg_id = 0;
-  double min_cost;
-  Reg* actual_reg;
-  FU* actual_FU = NULL;
-  FU* min_FU = NULL;
-  Reg* min_reg = NULL;
-  FU* best_FU;
-  int best_FU_new;
-  int min_FU_new;
-  Reg* best_reg = NULL;
-
-  queue<FU*> considered_FU;
 
   while ( !flag ) { // outer loop
     //starting from second iteration, update node's ASAP/ALAP first.
@@ -546,7 +575,7 @@ void FDS(int max_depth) {
           min_FU_new = 1;
           actual_FU->type = ops[i].type;
           actual_FU->id = res_id;
-          actual_FU->busy.resize(LC+1);
+          actual_FU->busy.resize(LC+2);
           actual_FU->demux_size = 0;
           for (int i = 0; i < LC + 1; i++ ) {
             actual_FU->busy[i] = 0;
@@ -584,6 +613,25 @@ void FDS(int max_depth) {
           DG[ops[i].type][t + d] += temp;                 // compute DG
     }   // end DG generation
 
+
+    bestNode = -1;
+    for ( auto n = 0; n < opn; n++ ) {
+      if ( ops[n].schl == false ) {  
+        for (auto t = ops[n].asap; t <= ops[n].alap; t++) {  // check all cc (all event) in MR of n [asap, alap]
+          force = 0.0;
+          force += computeSelfForce(n, t, DG);
+          force += computeChildForces(n, t, DG, 1, max_depth);
+          force += computeParentForces(n, t, DG, 1, max_depth);
+          if (bestNode == -1 || force < correction) {
+            bestNode = n;
+            correction = force;
+          }
+        }
+      }
+    }
+
+
+
     // start inner loop:
     // initialize best node parameter;
     bestForce = 0.0;
@@ -614,6 +662,8 @@ void FDS(int max_depth) {
           }
         }
 
+
+
         min_FU_new = 0;
         actual_reg = NULL;
         min_cost = -1;
@@ -624,14 +674,24 @@ void FDS(int max_depth) {
           min_FU_new = 1;
           actual_FU->type = ops[n].type;
           actual_FU->id = res_id;
-          actual_FU->busy.resize(LC+1);
+          actual_FU->busy.resize(LC+2);
           actual_FU->demux_size = 0;
           for (int i = 0; i < LC + 1; i++ ) {
             actual_FU->busy[i] = 0;
           }
           min_cost = computeBindForce(n,t,actual_FU,DG, &actual_reg);
           //min_cost += ct[ops[n].type];
-
+          diff_occupation = 0;
+          for (int cc = t-1; cc >= 1 && actual_FU->busy[cc] == 0; cc--) {
+            diff_occupation++;
+          }
+          if (diff_occupation % rt[ops[n].type] != 0 ) {
+            fu_lifetime = 0.1*ct[ops[n].type];
+          } else {
+            fu_lifetime = 1;
+          }
+          //min_cost = (min_cost + 1)*fu_lifetime;
+          min_cost = (min_cost + 1);
           min_FU = actual_FU;
           min_reg = actual_reg;
         } else {
@@ -640,6 +700,17 @@ void FDS(int max_depth) {
             actual_FU = considered_FU.front();
             considered_FU.pop();
             cost = computeBindForce(n,t,actual_FU,DG, &actual_reg);
+            diff_occupation = 0;
+            for (int cc = t-1; cc >= 1 && actual_FU->busy[cc] == 0; cc--) {
+              diff_occupation++;
+            }
+            if (diff_occupation % rt[ops[n].type] != 0 ) {
+              fu_lifetime = 0.1*ct[ops[n].type];
+            } else {
+              fu_lifetime = 1;
+            }
+            //cost = (cost + 1)*fu_lifetime;
+            cost = (cost + 1)*fu_lifetime;
             if ( min_cost == -1 || cost < min_cost ) {
               min_cost = cost;
               min_FU = actual_FU;
@@ -648,7 +719,14 @@ void FDS(int max_depth) {
           }
         }
 
-        force += min_cost;
+        est_lifetime = -1;
+        for (auto it = ops[n].child.begin(); it != ops[n].child.end(); it++ ) {
+          if ( (*it)->alap + rt[ops[n].type] - 1 > est_lifetime ) {
+            est_lifetime = (*it)->alap + rt[ops[n].type] - 1;
+          }
+        }
+
+        force = (force - correction)*min_cost;
 
         if (bestT < 0 || force < bestForce ) {  // update best node, cc, force value
           bestForce = force;
@@ -723,16 +801,6 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
     }
     count++;
   }
-
-
-  if ( count == 0 ) {
-    p1 = input_node;
-    p2 = input_node;
-  } else if (count == 1 ) {
-    p2 = input_node;
-  }
-
-
 
   // Check if parents already scheduled to create the connection.
   // Try to minimize the congestion to the input ports of the FU.
@@ -915,21 +983,25 @@ void allocate( FU* best_FU, Reg* best_reg, int node, int time, int id_reg) {
   // Delete from future child of the parent FU (therefore for the parent node that are
   // scheduled ) the current node
   for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++ ) {
-    if ( (*it)->schl == true ) {
-      (*it)->my_FU->future_child.erase(node);
-    } else {
-      // Add to the future parent of this FU the parents of node that are not scheduled
-      best_FU->future_parent.insert((*it)->id);
+    if ( (*it)->id < opn ) {
+      if ( (*it)->schl == true ) {
+        (*it)->my_FU->future_child.erase(node);
+      } else {
+        // Add to the future parent of this FU the parents of node that are not scheduled
+        best_FU->future_parent.insert((*it)->id);
+      }
     }
   }
   // Delete from future parent of the child FU (therefore for the child node that are
   // scheduled ) the current node
   for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++ ) {
-    if ( (*it)->schl == true ) {
-      (*it)->my_FU->future_parent.erase(node);
-    } else {
-      // Add to the future child of this FU the children of node that are not scheduled
-      best_FU->future_child.insert((*it)->id);
+    if ( (*it)->id < opn ) {
+      if ( (*it)->schl == true ) {
+        (*it)->my_FU->future_parent.erase(node);
+      } else {
+        // Add to the future child of this FU the children of node that are not scheduled
+        best_FU->future_child.insert((*it)->id);
+      }
     }
   }
 
@@ -967,9 +1039,11 @@ void updateAS(G_Node *ops) {
     if (!ops[node].schl) {
       max = 1;
       for (auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++) {
-        possible_time = (*it)->asap + rt[(*it)->type];
-        if ( possible_time > max ) {
-          max = possible_time;
+        if ( (*it)->id < opn ) {
+          possible_time = (*it)->asap + rt[(*it)->type];
+          if ( possible_time > max ) {
+            max = possible_time;
+          }
         }
       }
       ops[node].asap = max;
@@ -991,8 +1065,10 @@ void updateAL(G_Node *ops) {
     if (!ops[node].schl) {
       min = LC + 1;
       for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
-        if ( (*it)->alap < min ) {
-          min = (*it)->alap;
+        if ( (*it)->id < opn )  {
+          if ( (*it)->alap < min ) {
+            min = (*it)->alap;
+          }
         }
       }
       ops[node].alap = min - rt[ops[node].type];
@@ -1157,6 +1233,7 @@ int update_temp_lifetime(int parent_id, int child_id, int t) {
   int old_lifetime_end, new_child_lifetime, max_lifetime_end;
   int temporary_lifetime_end;
 
+
   old_lifetime_end = ops[parent_id].lifetime_end;
   new_child_lifetime = t + rt[ops[child_id].type] - 1;
   max_lifetime_end = -1;
@@ -1263,7 +1340,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
 
   for (auto it = ops[node].child.begin(); it != ops[node].child.end(); it++) {
     if ( (*it)->schl == false ) {
-      // Inserting parents operation non scheduled of node as future parents of act_FU
+      // Inserting children operation non scheduled of node as future children of act_FU
       future_children.insert((*it)->id);
     }
   }
@@ -1280,22 +1357,29 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
   sharability_parameter = 0.0;
 
   for ( auto it = ops[node].parent.begin(); it != ops[node].parent.end(); it++ ) {
+    FU* parent_FU;
     if ( (*it)->schl == true ) {
       // If scheduled compute the cost and the sharability parameter
-      FU* parent_FU  = (*it)->my_FU;
+      if ( (*it)->id < opn ) { 
+        parent_FU  = (*it)->my_FU;
+      }
       Reg* parent_reg = (*it)->my_reg;
       if ( parent_reg->out_FU.find(act_FU) == parent_reg->out_FU.end() ) {
-        double sharability;
-        sharability_element   += computeSharabilityParameter(&sharability, future_parents, parent_FU, DG);
-        sharability_parameter += sharability;
-        sharability_element   += computeSharabilityParameter(&sharability, parent_FU->future_child, act_FU, DG);
-        sharability_parameter += sharability;
+        if ((*it)->id < opn ) {
+          double sharability;
+          sharability_element   += computeSharabilityParameter(&sharability, future_parents, parent_FU, DG);
+          sharability_parameter += sharability;
+          sharability_element   += computeSharabilityParameter(&sharability, parent_FU->future_child, act_FU, DG);
+          sharability_parameter += sharability;
+        } else {
+          sharability_parameter++;
+        }
         actual_cost           += mux_cost;
       }
     }
   }
 
-  total_cost += (double)actual_cost*sharability_parameter/((double) sharability_element+1);
+  total_cost += ((double)actual_cost*sharability_parameter)/((double) sharability_element+1);
 
 
 
@@ -1415,7 +1499,7 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
       int mobility = ops[node_id].alap - ops[node_id].asap + 1;
       if ( dg_sum_mobility != 0 )
         //sharability_parameter += 1(double) ((cycle)/((double)mobility)) + ((dg_sum_cycle)/(dg_sum_mobility));
-        sharability_parameter += 10 + (double) ((cycle)/((double)mobility)) + ((dg_sum_cycle)/(dg_sum_mobility));
+        sharability_parameter += (double) ((cycle)/((double)mobility)) + ((dg_sum_cycle)/(dg_sum_mobility));
     }
   }
 
@@ -1520,3 +1604,130 @@ void print_binding() {
     }
   }
 }
+
+void create_input_registers(int* reg_id) {
+  
+  Reg* input_reg;
+  G_Node* new_ops_vec;
+  G_Node* input_node;
+  G_Node* output_node;
+  list<G_Node*> external_nodes;
+  int estimated_lifetime_end;
+  int external_input_id = opn;
+  
+
+  output_node = new G_Node;
+  external_nodes.push_back(output_node);
+  output_node->id = external_input_id;
+  external_input_id++;
+  output_node->type = 0;
+  output_node->schl = true;
+  output_node->schl_time = LC+1;
+  output_node->alap = LC+1;
+  output_node->asap = LC+1;
+
+
+  for ( int i = 0; i < opn; i++ ) {
+    // For each node that has 0 parents create registers for the input (coming from outside)
+    // and put also the registers into the pool of register in order to allow the sharing
+    // of this registers.
+    if ( ops[i].parent.empty() == true ) {
+      for ( int j = 0; j < 2; j++ ) {
+        input_node = new G_Node;
+        external_nodes.push_back(input_node);
+        input_node->id = external_input_id;
+        external_input_id++;
+        input_node->type = -1;
+        input_node->schl = true;
+        ops[i].parent.push_back(input_node);
+        input_node->child.push_back(&ops[i]);
+        input_reg = new Reg;
+        input_node->my_reg = input_reg;
+        input_reg->id = *reg_id;
+        *reg_id = *reg_id +1;
+        input_reg->busy.resize(LC+2);
+        estimated_lifetime_end = ops[i].alap + rt[ops[i].type] - 1;
+        input_node->lifetime_end = estimated_lifetime_end;
+        for ( int time = 1; time <= estimated_lifetime_end; time++ ) {
+          input_reg->busy[time] = 1;
+        }
+        reg_pool.push_back(input_reg);
+      }
+    // For each operation that has only one parent allocate a constant register and so 
+    // same as before but without 
+    } else if ( ops[i].parent.size() == 1 ) {
+      input_node = new G_Node;
+      external_nodes.push_back(input_node);
+      input_node->id = external_input_id;
+      external_input_id++;
+      input_node->type = 0;
+      input_node->schl = true;
+      input_node->child.push_back(output_node);
+      input_node->child.push_back(&ops[i]);
+      ops[i].parent.push_back(input_node);
+      input_reg = new Reg;
+      input_node->my_reg = input_reg;
+      input_reg->id = *reg_id;
+      *reg_id = *reg_id +1;
+      input_reg->busy.resize(LC+2);
+      estimated_lifetime_end = LC+1;
+      input_node->lifetime_end = estimated_lifetime_end;
+      for ( int time = 1; time <= estimated_lifetime_end; time++ ) {
+        input_reg->busy[time] = 1;
+      }
+    }
+  }
+
+  new_ops_vec = new G_Node[external_input_id];
+  for ( int i = 0; i < opn; i++ ) {
+    new_ops_vec[i].id =           ops[i].id;
+    new_ops_vec[i].type =         ops[i].type;
+    for ( auto it = ops[i].child.begin(); it != ops[i].child.end(); it++ ) {
+      new_ops_vec[i].child.push_back(&new_ops_vec[(*it)->id]);
+    }
+    for ( auto it = ops[i].parent.begin(); it != ops[i].parent.end(); it++ ) {
+      new_ops_vec[i].parent.push_back(&new_ops_vec[(*it)->id]);
+    }
+    new_ops_vec[i].alap =         ops[i].alap ;
+    new_ops_vec[i].asap =         ops[i].asap ;
+    new_ops_vec[i].tasap =        ops[i].tasap;
+    new_ops_vec[i].talap =        ops[i].talap;
+    new_ops_vec[i].schl =         ops[i].schl ;
+    new_ops_vec[i].tschl =        ops[i].tschl;
+    new_ops_vec[i].schl_time   =  ops[i].schl_time;    
+    new_ops_vec[i].my_FU =        ops[i].my_FU; 
+    new_ops_vec[i].my_reg =       ops[i].my_reg;    
+    new_ops_vec[i].lifetime_end = ops[i].lifetime_end ;
+  }
+  //delete[] ops;
+
+  for ( auto it = external_nodes.begin(); it != external_nodes.end(); it++ ) {
+    new_ops_vec[(*it)->id].id =           (*it)->id;
+    new_ops_vec[(*it)->id].type =         (*it)->type;
+    for ( auto it_c = (*it)->child.begin(); it_c != (*it)->child.end(); it_c++ ) {
+      new_ops_vec[(*it)->id].child.push_back(&new_ops_vec[(*it_c)->id]);
+    }
+    for ( auto it_p = (*it)->parent.begin(); it_p != (*it)->parent.end(); it_p++ ) {
+      new_ops_vec[(*it)->id].parent.push_back(&new_ops_vec[(*it_p)->id]);
+    }
+    new_ops_vec[(*it)->id].alap =         (*it)->alap ;
+    new_ops_vec[(*it)->id].asap =         (*it)->asap ;
+    new_ops_vec[(*it)->id].tasap =        (*it)->tasap;
+    new_ops_vec[(*it)->id].talap =        (*it)->talap;
+    new_ops_vec[(*it)->id].schl =         (*it)->schl ;
+    new_ops_vec[(*it)->id].tschl =        (*it)->tschl;
+    new_ops_vec[(*it)->id].schl_time  =   (*it)->schl_time;    
+    new_ops_vec[(*it)->id].my_FU =        (*it)->my_FU; 
+    new_ops_vec[(*it)->id].my_reg =       (*it)->my_reg;    
+    new_ops_vec[(*it)->id].lifetime_end = (*it)->lifetime_end ;
+  }
+
+  ops = new_ops_vec;
+
+  return ;
+}
+
+
+
+
+
