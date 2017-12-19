@@ -3,4 +3,4 @@
 rm res/*.txt
 rm latex.txt
 
-./bin/main interpolate_aux_dfg_12.txt res/ 1.5 -1
+./bin/main invert_matrix_general_dfg_3.txt res/ 3 -1
