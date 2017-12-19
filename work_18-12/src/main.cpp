@@ -481,9 +481,41 @@ void output_fu_binding(string str) {
         }
         fout_s << endl;
       }
-      fout_s.close();
-      fout_s.clear();
     }
+
+    cout << "-------------CHECKER FU BINDING--------------" << endl;
+
+    for ( int i = 0; i < opn; i++ ) {
+      int count;
+      G_Node* p1;
+      G_Node* p2;
+      count = 0;
+      cout << "-------------CHECKING PARENTS --------------" << endl;
+      for ( auto it = ops[i].parent.begin(); it != ops[i].parent.end(); it++ ) {
+        if ( count == 0 ) {
+          p1 = *it;
+        } else {
+          p2 = *it;
+        }
+        count++;
+      }
+      if ( !( (ops[i].my_FU->port0.find(p1->my_reg->id) != ops[i].my_FU->port0.end() &&
+               ops[i].my_FU->port1.find(p2->my_reg->id) != ops[i].my_FU->port1.end()) ||
+              (ops[i].my_FU->port0.find(p2->my_reg->id) != ops[i].my_FU->port0.end() &&
+               ops[i].my_FU->port1.find(p1->my_reg->id) != ops[i].my_FU->port1.end()) 
+            ) ) {
+        cout << "XXXXXXXXXXXXXXXXXX Problem parent of " << i << " XXXXXXXXXXXXXXXX" << endl;
+      }
+      cout << "-------------CHECKING CHILDREN --------------" << endl;
+      for ( auto it = ops[i].child.begin(); it != ops[i].child.end(); it++ ) {
+        if ( ops[i].my_reg->out_FU.find((*it)->my_FU) == ops[i].my_reg->out_FU.end() ) {
+          cout << "XXXXXXXXXXXXXXXXXX Problem child of " << i << " XXXXXXXXXXXXXXXX" << endl;
+        }
+      }
+    }
+
+    fout_s.close();
+    fout_s.clear();
   }
   else cout << "Unable to open file schedule file";
 
@@ -691,7 +723,7 @@ void FDS(int max_depth) {
             fu_lifetime = 1;
           }
           //min_cost = (min_cost + 1)*fu_lifetime;
-          min_cost = (min_cost + 1);
+          min_cost = (min_cost + 1)*fu_lifetime;
           min_FU = actual_FU;
           min_reg = actual_reg;
         } else {
@@ -1425,7 +1457,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
           }
         }
       }
-      actual_cost = (double) actual_cost*sharability_parameter/((double)sharability_element+1);
+      actual_cost = ((double) actual_cost*sharability_parameter)/((double)sharability_element+1);
       for ( auto it = actual_reg->out_FU.begin(); it != actual_reg->out_FU.end(); it++ ) {
         double sharability;
         int_sharability_element   += computeSharabilityParameter(&sharability, (*it)->future_parent, act_FU, DG);
@@ -1444,7 +1476,7 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
   }
 
   if ( flag == 1 ) {
-    actual_cost = (double) (number_of_schld_children*mux_cost + demux_cost + reg_cost)*sharability_parameter/((double)sharability_element+1);
+    actual_cost = ((double) number_of_schld_children*mux_cost + demux_cost + reg_cost)*sharability_parameter/((double)sharability_element+1);
   }
 
 
