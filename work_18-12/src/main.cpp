@@ -758,7 +758,7 @@ void FDS(int max_depth) {
           }
         }
 
-        force = (force - correction)*min_cost;
+        force = (force - correction + 100)*min_cost;
 
         if (bestT < 0 || force < bestForce ) {  // update best node, cc, force value
           bestForce = force;
@@ -1405,14 +1405,18 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
           sharability_parameter += sharability;
         } else {
           sharability_parameter++;
+          sharability_element++;
         }
         actual_cost           += mux_cost;
       }
     }
   }
 
-  total_cost += ((double)actual_cost*sharability_parameter)/((double) sharability_element+1);
-
+  if (sharability_element == 0 ) {
+    total_cost += actual_cost;
+  } else {
+    total_cost += ((double)actual_cost*sharability_parameter)/((double) sharability_element);
+  }
 
 
 /*
@@ -1457,7 +1461,9 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
           }
         }
       }
-      actual_cost = ((double) actual_cost*sharability_parameter)/((double)sharability_element+1);
+      if (sharability_element != 0 ) { 
+        actual_cost = ((double) actual_cost*sharability_parameter)/((double)sharability_element);
+      }
       for ( auto it = actual_reg->out_FU.begin(); it != actual_reg->out_FU.end(); it++ ) {
         double sharability;
         int_sharability_element   += computeSharabilityParameter(&sharability, (*it)->future_parent, act_FU, DG);
@@ -1466,7 +1472,11 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
         int_sharability_parameter += sharability;
       }
       if ( actual_reg->in_FU.find(act_FU) == actual_reg->in_FU.end() ) {
-        actual_cost +=  ( (double) demux_cost)*int_sharability_parameter/((double)int_sharability_element+1);
+        if (int_sharability_element != 0 ) {
+          actual_cost +=  ( (double) demux_cost)*int_sharability_parameter/((double)int_sharability_element);
+        } else {
+          actual_cost += demux_cost; 
+        }
       }
       if (min_cost == -1 || actual_cost < min_cost) {
         min_cost = actual_cost;
@@ -1476,7 +1486,11 @@ double computeBindForce(int node, int t, FU* act_FU, vector<vector<double>> DG, 
   }
 
   if ( flag == 1 ) {
-    actual_cost = ((double) number_of_schld_children*mux_cost + demux_cost + reg_cost)*sharability_parameter/((double)sharability_element+1);
+    if ( sharability_element != 0 ) {
+      actual_cost = ((double) number_of_schld_children*mux_cost + demux_cost + reg_cost)*sharability_parameter/((double)sharability_element);
+    } else  {
+      actual_cost = ((double) number_of_schld_children*mux_cost + demux_cost + reg_cost);
+    }
   }
 
 
@@ -1529,9 +1543,12 @@ int computeSharabilityParameter(double* sharability, set<int> future_elements,
         dg_sum_mobility += DG[poss_FU->type][cc];
       }
       int mobility = ops[node_id].alap - ops[node_id].asap + 1;
-      if ( dg_sum_mobility != 0 )
+      if ( dg_sum_mobility != 0 ) {
         //sharability_parameter += 1(double) ((cycle)/((double)mobility)) + ((dg_sum_cycle)/(dg_sum_mobility));
-        sharability_parameter += (double) ((cycle)/((double)mobility)) + ((dg_sum_cycle)/(dg_sum_mobility));
+        sharability_parameter += ((double) mobility - cycle)/((double)mobility) + ((dg_sum_cycle)/(dg_sum_mobility));
+      } else {
+        sharability_parameter += 1;
+      }
     }
   }
 

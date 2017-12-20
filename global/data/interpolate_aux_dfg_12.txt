@@ -34,3 +34,12 @@ Time FDS: 0.0587135 [s]
 
 
 
+DFG: data/interpolate_aux_dfg_12.txt
+
+# FU: 18
+Area Fu: 79644
+
+Time FDS: 0.528945 [s]
+
+
+
