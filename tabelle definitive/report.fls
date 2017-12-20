@@ -66,6 +66,12 @@ INPUT C:/Program Files/MiKTeX 2.9/tex/generic/oberdiek/infwarerr.sty
 INPUT C:/Program Files/MiKTeX 2.9/tex/generic/oberdiek/infwarerr.sty
 INPUT C:/Program Files/MiKTeX 2.9/tex/generic/oberdiek/ltxcmds.sty
 INPUT C:/Program Files/MiKTeX 2.9/tex/generic/oberdiek/ltxcmds.sty
+INPUT C:/Program Files/MiKTeX 2.9/tex/latex/xcolor/xcolor.sty
+INPUT C:/Program Files/MiKTeX 2.9/tex/latex/xcolor/xcolor.sty
+INPUT C:/Program Files/MiKTeX 2.9/tex/latex/graphics-cfg/color.cfg
+INPUT C:/Program Files/MiKTeX 2.9/tex/latex/graphics-cfg/color.cfg
+INPUT C:/Program Files/MiKTeX 2.9/tex/latex/colortbl/colortbl.sty
+INPUT C:/Program Files/MiKTeX 2.9/tex/latex/colortbl/colortbl.sty
 INPUT report.aux
 INPUT report.aux
 OUTPUT report.aux
