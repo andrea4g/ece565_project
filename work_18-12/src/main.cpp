@@ -718,7 +718,7 @@ void FDS(int max_depth) {
             diff_occupation++;
           }
           if (diff_occupation % rt[ops[n].type] != 0 ) {
-            fu_lifetime = 0.1*ct[ops[n].type];
+            fu_lifetime = 0.25*ct[ops[n].type];
           } else {
             fu_lifetime = 1;
           }
@@ -737,7 +737,7 @@ void FDS(int max_depth) {
               diff_occupation++;
             }
             if (diff_occupation % rt[ops[n].type] != 0 ) {
-              fu_lifetime = 0.1*ct[ops[n].type];
+              fu_lifetime = 0.25*ct[ops[n].type];
             } else {
               fu_lifetime = 1;
             }
@@ -758,7 +758,7 @@ void FDS(int max_depth) {
           }
         }
 
-        force = (force - correction + 100)*min_cost;
+        force = (force - correction + 0.001)*min_cost;
 
         if (bestT < 0 || force < bestForce ) {  // update best node, cc, force value
           bestForce = force;
