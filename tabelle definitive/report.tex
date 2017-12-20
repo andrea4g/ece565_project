@@ -35,17 +35,17 @@ higher that the sequential implementation.
     \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register}
     & \textbf{Mux} & \textbf{DeMux}\\
     \hline
-    \texttt{arf}										  &  28 & 0.0145 &  47568 &  6 &  16 &  528 &  208 & 0.1446 & 43794 & 6 & 17 & 32 & 11 \\ \hline
-    \texttt{ewf}										  &  34 & 0.0841 &  26400 &  4 &   8 &  400 &  176 & 0.3540 & 23610 & 4 & 9 & 34 & 13 \\ \hline
-    \texttt{feedback point}					  &  53 & 0.0721 &  66016 & 12 &  42 & 1040 &  464 & 0.7909 & 58252 & 12 & 44 & 63 & 19 \\ \hline
-    \texttt{hal}										  &  11 & 0.0026 &  25648 &  5 &  10 &  176 &   80 & 0.0186 & 24196 & 5 & 10 & 10 & 4 \\ \hline
-    \texttt{horner bezier surf}			  &  18 & 0.0160 &  26704 &  5 &  10 &  320 &  112 & 0.0965 & 24274 & 5 & 10 & 21 & 6 \\ \hline
-    \texttt{interpolate aux}				  & 108 & 0.5992 & 136956 & 18 &  96 & 2320 & 1088 & 10.9577 & 118188 & 18 & 97 & 150 & 66 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 3.0441 & 331916 & 56 & 154 & 8192 & 4048 & 693.0100 & 262478 & 56 & 154 & 478 & 189 \\ \hline
-    \texttt{matmul}									  & 109 & 0.0246 & 128880 & 20 &  50 & 2464 & 1152 & 8.0944 & 108378 & 20 & 50 & 142 & 57 \\ \hline
-    \texttt{motion vectors}					  &  32 & 0.0200 &  58992 &  9 &  28 &  576 &  240 & 0.1999 & 58828 & 9 & 29 & 41 & 17 \\ \hline
-    \texttt{smooth color z triangle}	& 197 & 2.2321 & 190576 & 20 & 130 & 4832 & 2272 & 108.9940 & 150886 & 20 & 131 & 304 & 121 \\ \hline
-    \texttt{write bmp header}				  & 106 & 0.5957 &  87344 & 16 &  76 & 2480 & 1184 & 8.1511 & 67820 & 16 & 79 & 155 & 63 \\ \hline
+    \texttt{arf}										  &  28 & 0.0145 &  47568 &  6 &  16 &  528 &  208 & 0.111528 & 43404 & 6 & 16 & 33 & 9 \\ \hline
+    \texttt{ewf}										  &  34 & 0.0841 &  26400 &  4 &   8 &  400 &  176 & 0.204586 & 23208 & 4 & 8 & 32 & 12 \\ \hline
+    \texttt{feedback point}					  &  53 & 0.0721 &  66016 & 12 &  42 & 1040 &  464 & 0.69402 & 70430 & 16 & 42 & 54 & 23 \\ \hline
+    \texttt{hal}										  &  11 & 0.0026 &  25648 &  5 &  10 &  176 &   80 & 0.0144445 & 24196 & 5 & 10 & 11 & 3 \\ \hline
+    \texttt{horner bezier surf}			  &  18 & 0.0160 &  26704 &  5 &  10 &  320 &  112 & 0.0718084 & 24256 & 5 & 10 & 17 & 7 \\ \hline
+    \texttt{interpolate aux}				  & 108 & 0.5992 & 136956 & 18 &  96 & 2320 & 1088 & 5.14074 & 131140 & 23 & 96 & 145 & 61 \\ \hline
+    \texttt{invert matrix general}	  & 333 & 3.0441 & 331916 & 56 & 154 & 8192 & 4048 & 258.086 & 269690 & 47 & 154 & 455 & 200 \\ \hline
+    \texttt{matmul}									  & 109 & 0.0246 & 128880 & 20 &  50 & 2464 & 1152 & 3.12063 & 118876 & 21 & 51 & 139 & 55 \\ \hline
+    \texttt{motion vectors}					  &  32 & 0.0200 &  58992 &  9 &  28 &  576 &  240 & 0.216462 & 79702 & 15 & 28 & 30 & 15 \\ \hline
+    \texttt{smooth color z triangle}	& 197 & 2.2321 & 190576 & 20 & 130 & 4832 & 2272 & 30.688 & 143086 & 20 & 130 & 288 & 101 \\ \hline
+    \texttt{write bmp header}				  & 106 & 0.5957 &  87344 & 16 &  76 & 2480 & 1184 & 2.27517 & 67838 & 20 & 76 & 150 & 73 \\ \hline
   \end{tabular}
   \end{center}
 \end{table}
@@ -62,17 +62,17 @@ higher that the sequential implementation.
     \hline
     \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
     \hline
-    \texttt{arf}										  &  28 & 0.0012 &  63840 &  8 &  16 &  368 &  224 & 0.0228 & 60486 & 8 & 16 & 24 & 9 \\ \hline
-    \texttt{ewf}										  &  34 & 0.0008 &  46056 &  7 &   9 &  480 &  224 & 0.0127 & 42894 & 7 & 11 & 32 & 17 \\ \hline
-    \texttt{feedback point}					  &  53 & 0.0160 & 102272 & 19 &  42 &  896 &  416 & 0.2322 & 94850 & 19 & 42 & 55 & 20 \\ \hline
-    \texttt{hal}										  &  11 & 0.0005 &  33928 &  6 &  10 &  144 &   64 & 0.0066 & 32728 & 6 & 10 & 7 & 1 \\ \hline
-    \texttt{horner bezier surf}			  &  18 & 0.0018 &  34984 &  6 &  10 &  272 &  112 & 0.0117 & 32830 & 6 & 10 & 20 & 5 \\ \hline
-    \texttt{interpolate aux}				  & 108 & 0.0283 & 219152 & 40 &  96 & 2064 & 1072 & 3.9194 & 201182 & 40 & 96 & 102 & 39 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 0.5783 & 484940 & 93 & 154 & 7344 & 3600 & 548.9270 & 423026 & 93 & 154 & 436 & 189 \\ \hline
-    \texttt{matmul}									  & 109 & 0.0234 & 199640 & 31 &  50 & 2112 & 1088 & 1.8375 & 181802 & 31 & 51 & 120 & 43 \\ \hline
-    \texttt{motion vectors}					  &  32 & 0.0019 & 108800 & 18 &  28 &  384 &  176 & 0.0321 & 105650 & 18 & 28 & 24 & 11 \\ \hline
-    \texttt{smooth color z triangle}	& 197 & 0.0834 & 406432 & 72 & 130 & 3664 & 1824 & 77.7940 & 375304 & 72 & 130 & 218 & 82 \\ \hline
-    \texttt{write bmp header}				  & 106 & 0.2850 & 102328 & 25 &  76 & 2416 & 1168 & 3.4823 & 82078 & 25 & 76 & 147 & 62 \\ \hline
+    \texttt{arf}										  &  28 & 0.0012 &  63840 &  8 &  16 &  368 &  224 & 0.0437855 & 69006 & 9 & 16 & 22 & 3 \\ \hline
+    \texttt{ewf}										  &  34 & 0.0008 &  46056 &  7 &   9 &  480 &  224 & 0.0117725 & 42108 & 7 & 9 & 33 & 13 \\ \hline
+    \texttt{feedback point}					  &  53 & 0.0160 & 102272 & 19 &  42 &  896 &  416 & 0.26524 & 99234 & 22 & 42 & 53 & 18 \\ \hline
+    \texttt{hal}										  &  11 & 0.0005 &  33928 &  6 &  10 &  144 &   64 & 0.0027001 & 41284 & 7 & 10 & 4 & 2 \\ \hline
+    \texttt{horner bezier surf}			  &  18 & 0.0018 &  34984 &  6 &  10 &  272 &  112 & 0.013677 & 32824 & 6 & 10 & 17 & 7 \\ \hline
+    \texttt{interpolate aux}				  & 108 & 0.0283 & 219152 & 40 &  96 & 2064 & 1072 & 5.06548 & 201128 & 40 & 96 & 102 & 30 \\ \hline
+    \texttt{invert matrix general}	  & 333 & 0.5783 & 484940 & 93 & 154 & 7344 & 3600 & 378.548 & 439460 & 94 & 154 & 396 & 128 \\ \hline
+    \texttt{matmul}									  & 109 & 0.0234 & 199640 & 31 &  50 & 2112 & 1088 & 1.41968 & 174254 & 31 & 50 & 118 & 51 \\ \hline
+    \texttt{motion vectors}					  &  32 & 0.0019 & 108800 & 18 &  28 &  384 &  176 & 0.0811636 & 139814 & 22 & 28 & 15 & 2 \\ \hline
+    \texttt{smooth color z triangle}	& 197 & 0.0834 & 406432 & 72 & 130 & 3664 & 1824 & 47.815 & 375148 & 72 & 130 & 204 & 70 \\ \hline
+    \texttt{write bmp header}				  & 106 & 0.2850 & 102328 & 25 &  76 & 2416 & 1168 & 1.62645 & 74094 & 31 & 76 & 133 & 58 \\ \hline
   \end{tabular}
   \end{center}
 \end{table}
@@ -89,17 +89,17 @@ higher that the sequential implementation.
     \hline
     \textbf{Name} & \textbf{Nodes} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux} & \textbf{Time [s]} & \textbf{Area} & \textbf{FU} & \textbf{Register} & \textbf{Mux} & \textbf{DeMux}\\
     \hline
-    \texttt{arf}										  &  28 &  0.0687 &  47280 &  6 &  16 &  480 &  208 & 0.3529 & 43836 & 6 & 17 & 37 & 13 \\ \hline
-    \texttt{ewf}										  &  34 &  0.2043 &  17544 &  3 &   7 &  416 &  176 & 0.7894 & 14634 & 3 & 8 & 32 & 11 \\ \hline
-    \texttt{feedback point}					  &  53 &  0.3373 &  56752 &  9 &  42 & 1008 &  544 & 3.7495 & 47908 & 9 & 43 & 68 & 26 \\ \hline
-    \texttt{hal}										  &  11 &  0.0128 &  17080 &  4 &  10 &  160 &   96 & 0.0464 & 15658 & 4 & 10 & 14 & 5 \\ \hline
-    \texttt{horner bezier surf}			  &  18 &  0.0689 &  18136 &  4 &  10 &  304 &  128 & 0.2748 & 16864 & 4 & 13 & 23 & 5 \\ \hline
-    \texttt{interpolate aux}				  & 108 &  1.4881 & 100604 & 11 &  96 & 2416 & 1168 & 26.2902 & 80900 & 11 & 97 & 168 & 68 \\ \hline
-    \texttt{invert matrix general}	  & 333 & 12.6587 & 310328 & 53 & 154 & 7840 & 3728 & 2836.9030 & 245150 & 53 & 155 & 456 & 185 \\ \hline
-    \texttt{matmul}									  & 109 &  0.8614 &  98096 & 11 &  50 & 2416 & 1136 & 15.9657 & 78350 & 11 & 51 & 151 & 46 \\ \hline
-    \texttt{motion vectors}					  &  32 &  0.0704 &  36496 &  5 &  28 &  656 &  256 & 0.4206 & 31792 & 5 & 29 & 45 & 19 \\ \hline
-    \texttt{smooth color z triangle}	& 197 &  9.2340 & 172288 & 18 & 130 & 4784 & 2128 & 370.0540 & 133660 & 18 & 131 & 299 & 111 \\ \hline
-    \texttt{write bmp header}				  & 106 &  2.0745 &  82936 & 11 &  76 & 2528 & 1168 & 19.8010 & 63220 & 11 & 79 & 155 & 63 \\ \hline
+    \texttt{arf}										  &  28 &  0.0687 &  47280 &  6 &  16 &  480 &  208 & 0.671973 & 43404 & 6 & 16 & 32 & 10 \\ \hline
+    \texttt{ewf}										  &  34 &  0.2043 &  17544 &  3 &   7 &  416 &  176 & 1.08504 & 33156 & 6 & 8 & 34 & 12 \\ \hline
+    \texttt{feedback point}					  &  53 &  0.3373 &  56752 &  9 &  42 & 1008 &  544 & 2.55101 & 50362 & 12 & 42 & 69 & 26 \\ \hline
+    \texttt{hal}										  &  11 &  0.0128 &  17080 &  4 &  10 &  160 &   96 & 0.0493829 & 24190 & 5 & 10 & 10 & 3 \\ \hline
+    \texttt{horner bezier surf}			  &  18 &  0.0689 &  18136 &  4 &  10 &  304 &  128 & 0.279143 & 16120 & 4 & 11 & 23 & 9 \\ \hline
+    \texttt{interpolate aux}				  & 108 &  1.4881 & 100604 & 11 &  96 & 2416 & 1168 & 17.5141 & 82262 & 12 & 97 & 165 & 70 \\ \hline
+    \texttt{invert matrix general}	  & 333 & 12.6587 & 310328 & 53 & 154 & 7840 & 3728 & & & & & \\ \hline
+    \texttt{matmul}									  & 109 &  0.8614 &  98096 & 11 &  50 & 2416 & 1136 & 10.5066 & 60022 & 8 & 52 & 151 & 62 \\ \hline
+    \texttt{motion vectors}					  &  32 &  0.0704 &  36496 &  5 &  28 &  656 &  256 & 0.551875 & 42676 & 8 & 28 & 42 & 16 \\ \hline
+    \texttt{smooth color z triangle}	& 197 &  9.2340 & 172288 & 18 & 130 & 4784 & 2128 & 141.511 & 117170 & 16 & 132 & 298 & 105 \\ \hline
+    \texttt{write bmp header}				  & 106 &  2.0745 &  82936 & 11 &  76 & 2528 & 1168 & 9.23371 & 62972 & 16 & 76 & 167 & 71 \\ \hline
   \end{tabular}
   \end{center}
 \end{table}
