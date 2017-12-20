@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
   cout << "Time [ns]: " << chrono::duration_cast<chrono::nanoseconds>(end-start).count() << endl;
   cout << "Time [s]: " << (double)chrono::duration_cast<chrono::nanoseconds>(end-start).count()/1000000000 << endl;
   t = (double)chrono::duration_cast<chrono::nanoseconds>(end-start).count()/1000000000;
-  printlatex();
+  //printlatex();
   delete[] ops;
 
   return 0;
