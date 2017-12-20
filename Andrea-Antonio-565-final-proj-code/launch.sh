@@ -1,7 +1,9 @@
 #!/bin/bash
 
 rm res/*.txt
-rm latex.txt
+rm res/*.txtbind
+rm res/*.txtfubind
+#rm latex.txt
 
 filesInCurrentDir=`ls *.txt`
 for file in $filesInCurrentDir; do

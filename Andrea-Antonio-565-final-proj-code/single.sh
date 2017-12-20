@@ -1,6 +1,8 @@
 #!/bin/bash
 
 rm res/*.txt
-rm latex.txt
+rm res/*.txtbind
+rm res/*.txtfubind
+#rm latex.txt
 
-./bin/main invert_matrix_general_dfg_3.txt res/ 3 -1
+./bin/main hal.txt res/ 3 -1

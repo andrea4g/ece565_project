@@ -171,3 +171,172 @@ Type: 0
 		65 
 	FU_id 11 Port1
 		44 
+Type: 0
+	FU_id 1 Port0
+		0 		4 		9 		46 		60 		82 		88 
+	FU_id 1 Port1
+		5 		7 		47 		60 		61 		83 		89 
+	FU_id 4 Port0
+		8 		10 		18 		26 		39 		54 		74 
+	FU_id 4 Port1
+		8 		19 		26 		27 		40 		55 		61 		74 		75 
+	FU_id 9 Port0
+		11 		16 		28 		32 		67 
+	FU_id 9 Port1
+		0 		9 		12 		33 		39 		60 		68 
+	FU_id 12 Port0
+		12 		14 		95 		96 		102 		110 
+	FU_id 12 Port1
+		10 		35 		96 		103 		110 		111 
+	FU_id 17 Port0
+		1 		16 		17 		38 
+	FU_id 17 Port1
+		11 		16 		26 		40 
+	FU_id 20 Port0
+		17 		18 
+	FU_id 20 Port1
+		12 		17 		29 		82 
+	FU_id 25 Port0
+		14 		18 
+	FU_id 25 Port1
+		14 		37 		42 		95 
+	FU_id 28 Port0
+		19 
+	FU_id 28 Port1
+		15 		67 
+Type: 1
+Type: 2
+	FU_id 0 Port0
+		2 		9 
+	FU_id 0 Port1
+		3 		10 		21 
+	FU_id 3 Port0
+		3 		16 		86 
+	FU_id 3 Port1
+		17 		49 		87 
+	FU_id 8 Port0
+		4 		30 		37 
+	FU_id 8 Port1
+		31 		38 		77 
+	FU_id 11 Port0
+		5 		44 		52 
+	FU_id 11 Port1
+		45 		53 		105 
+	FU_id 16 Port0
+		24 		58 		65 
+	FU_id 16 Port1
+		25 		59 		66 
+	FU_id 19 Port0
+		50 		72 		80 
+	FU_id 19 Port1
+		51 		73 		81 
+	FU_id 24 Port0
+		78 		84 		93 
+	FU_id 24 Port1
+		79 		85 		94 
+	FU_id 27 Port0
+		22 		100 		108 
+	FU_id 27 Port1
+		23 		101 		109 
+	FU_id 32 Port0
+		0 		7 
+	FU_id 32 Port1
+		1 		8 
+	FU_id 33 Port0
+		28 		42 		106 
+	FU_id 33 Port1
+		29 		43 		107 
+	FU_id 34 Port0
+		14 		56 
+	FU_id 34 Port1
+		15 		57 
+	FU_id 35 Port0
+		35 
+	FU_id 35 Port1
+		36 
+	FU_id 36 Port0
+		63 
+	FU_id 36 Port1
+		64 
+	FU_id 37 Port0
+		70 
+	FU_id 37 Port1
+		71 
+	FU_id 38 Port0
+		91 
+	FU_id 38 Port1
+		92 
+	FU_id 39 Port0
+		98 
+	FU_id 39 Port1
+		99 
+Type: 3
+	FU_id 6 Port0
+		7 
+	FU_id 6 Port1
+		8 
+	FU_id 14 Port0
+		9 
+	FU_id 14 Port1
+		10 
+	FU_id 22 Port0
+		11 
+	FU_id 22 Port1
+		12 
+	FU_id 30 Port0
+		14 
+	FU_id 30 Port1
+		15 
+Type: 4
+Type: 5
+	FU_id 2 Port0
+		7 
+	FU_id 2 Port1
+		6 		13 
+	FU_id 5 Port0
+		8 
+	FU_id 5 Port1
+		20 		34 
+	FU_id 10 Port0
+		9 
+	FU_id 10 Port1
+		41 		62 
+	FU_id 13 Port0
+		10 
+	FU_id 13 Port1
+		48 		90 
+	FU_id 18 Port0
+		11 
+	FU_id 18 Port1
+		69 
+	FU_id 21 Port0
+		12 
+	FU_id 21 Port1
+		76 
+	FU_id 26 Port0
+		14 
+	FU_id 26 Port1
+		97 
+	FU_id 29 Port0
+		15 
+	FU_id 29 Port1
+		104 
+Type: 6
+	FU_id 7 Port0
+		7 
+	FU_id 7 Port1
+		1 
+	FU_id 15 Port0
+		8 
+	FU_id 15 Port1
+		27 
+	FU_id 23 Port0
+		9 
+	FU_id 23 Port1
+		37 
+	FU_id 31 Port0
+		10 
+	FU_id 31 Port1
+		15 
+Type: 7
+Type: 8
