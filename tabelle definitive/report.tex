@@ -9,8 +9,8 @@
 \usepackage{pdflscape}
 \usepackage[table]{xcolor}
 \newcolumntype{g}{>{\columncolor[gray]{.8}}c}
-\title{\textbf{Thesis report summary}}
-\author{\textbf{Andrea Gualco - agualc2 - 651262476}}
+\title{\textbf{Results of the simultaneous scheduling, binding and register allocation}}
+\author{\textbf{Antonio Cipoletta - Andrea Gualco}}
 
 \setcounter{secnumdepth}{0}
 \pagenumbering{gobble}
@@ -19,16 +19,20 @@
 %------------------------------------------------------------------------------
 %---------------------------------------------------------------------------------------------------------------------------------
 \begin{landscape}
-\section{Results}
+%\section{Results}
+\maketitle
+Here reported there is the results of the simultaneous approach vs. the sequential.\\
 The first number of the command indicate the latency constraint that multiply the ASAP time in order to obtain
 the overall latency constraint of the DFG.\\
 The second number indicate the depth of the update of the parent and child in the FDS. -1 indicate the max depth possible\\
 As underlined during the presentation the run time of the simultaneous scheduling, binding and reg allocation is much more
-higher that the sequential implementation.\\
-\textbf{NB}: the grey columns are the values related to the simultaneous scheduling, binding and register allocation,
+higher that the sequential implementation.
+
+\subsection{NB}
+The grey columns are the values related to the simultaneous scheduling, binding and register allocation,
 while the other columns (with the exception of the DFG name and \# nodes that are common for both approaches),
 are related to the sequential approach (scheduling + binding + register allocation)
-
+\clearpage
 \subsection{Latency constraint: 1.5 - Depth FDS: -1}
 \begin{table}[!h]
   \begin{center}
