@@ -1,7 +1,0 @@
-For DFG: res/interpolate_aux_dfg_12_bind_alloc_result.txt
-Total # of Registers: 108
-Total # of 2-1 Mux: 224
-Total # of 2-1 Demux: 1072
-Max Mux size: 3
-Max Demux size: 8
-Total area (mux + reg): 49248

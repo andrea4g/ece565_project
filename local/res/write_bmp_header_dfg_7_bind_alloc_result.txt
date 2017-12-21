@@ -1,7 +1,0 @@
-For DFG: res/write_bmp_header_dfg_7_bind_alloc_result.txt
-Total # of Registers: 95
-Total # of 2-1 Mux: 176
-Total # of 2-1 Demux: 496
-Max Mux size: 3
-Max Demux size: 5
-Total area (mux + reg): 40512

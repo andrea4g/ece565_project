@@ -10,7 +10,7 @@ for file in $filesInCurrentDir; do
   fname=$(basename $file)
   fbname=${fname%.*}
   ./bin/fds $file res/ 1.5 -1
-  #./bin/furegglobal $file res/${fbname}_result.txt
+  ./bin/furegglobal $file res/${fbname}_result.txt
   echo "Finished $file"
 done
 

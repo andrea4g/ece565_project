@@ -1,7 +1,0 @@
-For DFG: res/horner_bezier_surf_dfg_12_bind_alloc_result.txt
-Total # of Registers: 13
-Total # of 2-1 Mux: 144
-Total # of 2-1 Demux: 144
-Max Mux size: 4
-Max Demux size: 4
-Total area (mux + reg): 6720

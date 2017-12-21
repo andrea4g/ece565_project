@@ -1,9 +1,0 @@
-DFG: data/horner_bezier_surf_dfg_12.txt
-
-# FU: 5
-Area Fu: 20272
-
-Time FDS: 0.0166697 [s]
-
-
-

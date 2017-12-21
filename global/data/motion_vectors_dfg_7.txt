@@ -1,9 +1,0 @@
-DFG: data/motion_vectors_dfg_7.txt
-
-# FU: 9
-Area Fu: 47344
-
-Time FDS: 0.0194468 [s]
-
-
-

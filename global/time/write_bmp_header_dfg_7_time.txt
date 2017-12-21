@@ -1,1 +1,0 @@
-Elapsed time FDS: 0.62303 s

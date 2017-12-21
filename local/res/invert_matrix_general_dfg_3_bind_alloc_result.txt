@@ -1,7 +1,0 @@
-For DFG: res/invert_matrix_general_dfg_3_bind_alloc_result.txt
-Total # of Registers: 229
-Total # of 2-1 Mux: 688
-Total # of 2-1 Demux: 2736
-Max Mux size: 4
-Max Demux size: 8
-Total area (mux + reg): 108480

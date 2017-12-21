@@ -1,0 +1,22 @@
+rt[0].area = 1368;
+rt[1].area = 96;
+rt[2].area = 8568;
+rt[3].area = 420;
+rt[4].area = 288;
+rt[5].area = 1672;
+rt[6].area = 96;
+rt[7].area = 1476;
+rt[8].area = 15048;
+
+rt[0].delay= 1;
+rt[1].delay= 1;
+rt[2].delay= 3;
+rt[3].delay= 1;
+rt[4].delay= 1;
+rt[5].delay= 1;
+rt[6].delay= 1;
+rt[7].delay= 1;
+rt[8].delay= 8;
+
+REG16.area = 384;
+MUX21.area = 6;
