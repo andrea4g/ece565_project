@@ -1,4 +1,4 @@
-# Scheduling, binding and register allocation on global register architecture
+# Sequential scheduling, binding and register allocation on global register architecture
 
 The program has to be compiled in Linux.
 It is possible to compile and execute it in Visual Studio by adding <#include "stdafx.h"> among the libraries and then copying the FDS.cpp and FuReg.cpp inside the VS project folder.
